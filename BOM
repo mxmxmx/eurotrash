@@ -1,0 +1,76 @@
+/* BOM for eurotrash wav player */
+
+
+0805 resistors:
+
+- 100R :         4x 
+- 500R :         12x 
+- 1k :           4x
+- 10k :          2x
+- 20k :          2x
+- 33k :		 6x	
+- 100k :         12x
+
+1206: 
+
+- 10R (or use 1206 ferrit bead, rated 1A): 1x
+
+0805 caps (16V or better):
+
+- 22pf :          2x (ceramic)
+- 3n3  :          2x (NP0/C0G, may be 1206)
+- 100n :         22x (ceramic)
+- 300n :          2x (ceramic) 
+- 1  uf:          2x (ceramic, may be 1206)
+- 2.2uf:	  2x (ceramic, may be 1206)	  
+
+caps (electrolytic), through hole (25V or better):
+
+- 10uf : 	  2x
+- 22uf :	  3x
+
+		
+ICs/semis:
+
+- schottky diode (minimelf) : 2x
+- BAT54s (schottky diode, sot-23) : 4x
+- MMBT3904 (NPN trans., sot-23) : 2x
+- SM5817 diodes : 2x
+- TL072 (SOIC) : 2x (*)
+- TL074 (SOIC) : 1x
+- PCM5102a (TSSOP) : 1x
+
+
+voltage regulators:
+
+- ADP150 (3v3 regulator, TSOT): 1x
+- LM1117-33 (3v3 LDO reg., DPAK): 1x
+- LM1117-50 (5v0 LDO reg., DPAK): 1x
+- 79L05 -5v (TO-92): 1x
+
+
+misc:
+
+- inductor 10uH (SMD/1206)
+- 16MHz crystal (HC/49us): 1x 
+- atmega328p : 1x (TQFP) 
+- teensy3.1  : 1x (don't forget to cut the usb/power trace)
+- 2x3 RM2.54 pin header (ISP)
+- 2x5 RM2.54 pin header (eurorack power connector)
+- molex micro SD card socket (# 502774-0891)
+- winbond W25Q128FV (SPI flash) (**)
+
+- jacks: 10 Kobiconn / thonkiconn
+- rotary encoder w/switch: 2x (i was using PEC11-4215K-S0024)
+- 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) (***)
+
+
+notes: 
+
+(*) something fancier can be used for the audio output, of course (one of the dual op amps is for audio out, the other is used for the digital outputs). i've tried both OPA1662 and AD8599 in the audio path - not sure whether i'd notice the difference, YMMV.
+     
+(**) the spi flash is optional, say, if you just wanted to store some drum samples.
+
+(***) i couldn't find an 8 pin connnector / socket low enough to line up the display with the jacks/encoders (c. 10mm); i just soldered it directly to the board — which evidently isn't ideal if, some day, you wanted to reuse the display for something else. my oled came with a 8 pin connector, but you may want to get one ('machine pin'), just in case.
+
+

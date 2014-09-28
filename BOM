@@ -8,7 +8,7 @@
 - 1k :           4x
 - 10k :          2x
 - 20k :          2x
-- 33k :		 6x	
+- 33k :		 8x	
 - 100k :         12x
 
 1206: 
@@ -32,7 +32,6 @@ caps (electrolytic), through hole (25V or better):
 		
 ICs/semis:
 
-- schottky diode (minimelf) : 2x
 - BAT54s (schottky diode, sot-23) : 4x
 - MMBT3904 (NPN trans., sot-23) : 2x
 - SM5817 diodes : 2x

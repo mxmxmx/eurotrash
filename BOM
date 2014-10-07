@@ -22,12 +22,13 @@
 - 100n :         22x (ceramic)
 - 300n :          2x (ceramic) 
 - 1  uf:          2x (ceramic, may be 1206)
-- 2.2uf:	  2x (ceramic, may be 1206)	  
+- 2.2uf:	  2x (ceramic, may be 1206)
+- 10uf :          2x (ceramic, or tantal)	  
 
 caps (electrolytic), through hole (25V or better):
 
-- 10uf : 	  2x
-- 22uf :	  3x
+- 10uf : 	  1x
+- 22uf :	  4x
 
 		
 ICs/semis:

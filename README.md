@@ -3,7 +3,8 @@ eurotrash
 
 eurorack stereo/dual mono wav player 
 
-10HP, depth ~ 28mm
+10HP
+depth ~ 28mm
 
 teensy 3.1 / pcm5102a ; atmega328 + 128x32 oled
 

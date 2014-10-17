@@ -3,6 +3,8 @@ eurotrash
 
 eurorack stereo/dual mono wav player 
 
+compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.html
+
 10HP
 
 depth ~ 28mm

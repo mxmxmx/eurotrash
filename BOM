@@ -46,7 +46,7 @@ voltage regulators:
 - ADP150 (3v3 regulator, TSOT): 1x
 - LM1117-33 (3v3 LDO reg., DPAK): 1x
 - LM1117-50 (5v0 LDO reg., DPAK): 1x
-- 79L05 -5v (TO-92): 1x
+- 79L05 -5v (TO-92): 1x (or LM4040-5 + 470R (0805)) (****)
 
 
 misc:
@@ -67,10 +67,15 @@ misc:
 
 notes: 
 
-(*) something fancier can be used for the audio output, of course (one of the dual op amps is for audio out, the other is used for the digital outputs). i've tried both OPA1662 and AD8599 in the audio path - not sure whether i'd notice the difference, YMMV.
+(*) something fancier can be used for the audio output, of course (one of the dual op amps is for audio out, 
+the other is used for the digital outputs). 
+i've tried both OPA1662 and AD8599 in the audio path - not sure whether i'd notice the difference, YMMV.
      
 (**) the spi flash is optional, say, if you just wanted to store some drum samples.
 
-(***) i couldn't find an 8 pin connnector / socket low enough to line up the display with the jacks/encoders (c. 10mm); i just soldered it directly to the board — which evidently isn't ideal if, some day, you wanted to reuse the display for something else. my oled came with a 8 pin connector, but you may want to get one ('machine pin'), just in case.
+(***) i couldn't find an 8 pin connnector / socket low enough to line up the display with the jacks/encoders (c. 10mm); 
+i just soldered it directly to the board — which evidently isn't ideal if, some day, you wanted to reuse the display for something else. 
+my oled came with a 8 pin connector, but you may want to get one ('machined'/round pins), just in case.
 
+(****) using a 79L05 is ok, but using a LM4040-5 will result in somewhat better ADC performance. (see build instructions)
 

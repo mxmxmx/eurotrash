@@ -64,8 +64,8 @@ misc:
 
 - jacks: 10 kobiconn / thonkiconn
 - rotary encoder w/switch: 2x (i was using PEC11-4215K-S0024)
-- 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) (***)
-
+- 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) 
+- 8 pin header for oled + 8 pin socket (low profile), RM2.54 (***)
 
 notes: 
 
@@ -75,9 +75,9 @@ i've tried both OPA1662 and AD8599 in the audio path - not sure whether i'd noti
      
 (**) the spi flash is optional, say, if you just wanted to store some drum samples. in that case, also get 3x 100R more (0805) (in the unlikely event you got these in multiples of 1)
 
-(***) i couldn't find an 8 pin connnector / socket low enough to line up the display with the jacks/encoders (c. 10mm); 
-i just soldered it directly to the board — which evidently isn't ideal if, some day, you wanted to reuse the display for something else. 
-my oled came with a 8 pin connector, but you may want to get one ('machined'/round pins), just in case.
+(***) you can solder the oled directly to the board (with the pin header) — which evidently isn't ideal; the better way is to
+put the *socket* onto the oled and use headers like these http://www.taydaelectronics.com/stackable-header-8-pins-2-54mm.html , 
+pushing them from up from the bottom of the board. see build doc.
 
 (****) using a 79L05 is ok, but using a LM4040-5 will result in somewhat better ADC performance. (see build instructions)
 

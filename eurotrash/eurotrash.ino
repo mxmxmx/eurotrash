@@ -21,7 +21,7 @@ AudioPlaySdWav           wav1, wav2, wav3, wav4;
 AudioPlaySdWav           *wav[4] = {&wav1, &wav2, &wav3, &wav4};
 AudioEffectFade          fade1, fade2, fade3, fade4;
 AudioEffectFade          *fade[4] = {&fade1, &fade2, &fade3, &fade4};
-AudioMixer4              mix;
+AudioMixer4              mixL, mixR;
 AudioOutputI2S           dac;   
 
 AudioConnection          patchCord1(wav1, 0, fade1, 0);
@@ -29,11 +29,12 @@ AudioConnection          patchCord2(wav2, 0, fade2, 0);
 AudioConnection          patchCord3(wav3, 0, fade3, 0);
 AudioConnection          patchCord4(wav4, 0, fade4, 0);
 
-AudioConnection          patchCord5(fade1, 0, mix, 0);
-AudioConnection          patchCord6(fade2, 0, mix, 1);
-AudioConnection          patchCord7(fade3, 0, mix, 2);
-AudioConnection          patchCord8(fade4, 0, mix, 3);
-AudioConnection          patchCord9(mix, 0, dac, 0);
+AudioConnection          patchCord5(fade1, 0, mixL, 0);
+AudioConnection          patchCord6(fade2, 0, mixL, 1);
+AudioConnection          patchCord7(fade3, 0, mixR, 0);
+AudioConnection          patchCord8(fade4, 0, mixR, 1);
+AudioConnection          patchCord9(mixL, 0, dac, 0);
+AudioConnection          patchCord10(mixR, 0, dac, 1);
 
 /* ------------------------- pins ------------------------ */
 
@@ -142,10 +143,10 @@ void setup() {
   }
   delay(100);
   
-  mix.gain(0, 0);
-  mix.gain(1, 0);
-  mix.gain(2, 0);
-  mix.gain(3, 0);
+  mixL.gain(0, 0);
+  mixL.gain(1, 0);
+  mixR.gain(0, 0);
+  mixR.gain(1, 0);
   
   generate_file_list();
 
@@ -162,10 +163,10 @@ void setup() {
   audioChannels[RIGHT] = (audioChannel*)malloc(sizeof(audioChannel));
   init_channels(INIT_FILE);
   
-  mix.gain(0, audioChannels[LEFT]->_gain);
-  mix.gain(1, audioChannels[LEFT]->_gain);
-  mix.gain(2, audioChannels[RIGHT]->_gain);
-  mix.gain(3, audioChannels[RIGHT]->_gain);
+  mixL.gain(0, audioChannels[LEFT]->_gain);
+  mixL.gain(1, audioChannels[LEFT]->_gain);
+  mixR.gain(0, audioChannels[RIGHT]->_gain);
+  mixR.gain(1, audioChannels[RIGHT]->_gain);
   
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);

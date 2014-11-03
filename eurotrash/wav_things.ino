@@ -23,13 +23,13 @@ void init_channels(uint8_t f) {
 
 void play_x(uint8_t _channel) {
   
-  uint8_t _swap = (_channel*2) + audioChannels[_channel]->swap; // which file -- 1/2 (left) or 3/4 (right) ?
-  fade[_swap]->fadeIn(FADE_IN);
-  update_wav(_swap, _channel);
+  uint8_t _swap = (_channel*2) + audioChannels[_channel]->swap; // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)
+  fade[_swap]->fadeIn(FADE_IN);                                 // fade in object 1-4
+  update_wav(_swap, _channel);                                  // and play 
   
    // now swap the file and fade out previous file:
   if (audioChannels[_channel]->swap)  audioChannels[LEFT]->swap = false; 
-  else        audioChannels[LEFT]->swap = true;
+  else                                audioChannels[LEFT]->swap = true;
   
   _swap = (_channel*2) + audioChannels[_channel]->swap;
   fade[audioChannels[_channel]->swap]->fadeOut(FADE_OUT);

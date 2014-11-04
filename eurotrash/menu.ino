@@ -1,22 +1,22 @@
 /*
 *
-*  UI / display
+*  UI : display / encoders
 *
 */
 
-#define MAXFILES 128
+#define MAXFILES 128                 // we don't allow more than 128 files (for no particular reason); banks? (but would just add more menu pages)
 uint8_t FILECOUNT;
-const uint8_t DISPLAY_LEN = 9; //8 == 8.3 
+const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
 String FILES[MAXFILES]; 
 String DISPLAYFILES[MAXFILES];
 uint32_t FILE_LEN[MAXFILES];
 uint32_t CTRL_RES[MAXFILES];
 uint32_t CTRL_RES_EOF[MAXFILES];
-float DEFAULT_GAIN = 0.4;
+float DEFAULT_GAIN = 0.4;            // adjust default volume [0.0 - 1.0]
 
-uint8_t ENCODER_SWAP, DIR;
-const uint8_t CTRL_RESOLUTION = 100; // play head resolution (encoders); adjust to your liking (< 9999)
-uint8_t SLOW = 0;
+uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
+const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file; adjust to your liking (< 9999)
+uint8_t SLOW = 0;                    // encoder response
 int16_t prev_encoderdata[]  = {-999, -999};
 
 String leftdisplay  = "      0"; 
@@ -24,6 +24,7 @@ String rightdisplay = "      0";
 uint8_t MENU_PAGE[2] = {0,0};
 uint8_t filedisplay[2];
 
+/* menu pages */
 enum { 
  FILESELECT,
  STARTPOS,
@@ -54,9 +55,9 @@ void update_enc() {
   if (encoder[_ch].change()) { 
         encoderdata = encoder[_ch].pos()>>SLOW;
         update_display(_ch, encoderdata);
-        // update EOF
+        /* update EOF */
         uint32_t tmp, tmp2;
-        tmp = audioChannels[_ch]->pos1 * audioChannels[_ch]->ctrl_res_eof; // end pos 
+        tmp = audioChannels[_ch]->pos1 * audioChannels[_ch]->ctrl_res_eof;                      // end pos 
         tmp2 = (CTRL_RESOLUTION - audioChannels[_ch]->pos0) * audioChannels[_ch]->ctrl_res_eof; // start pos
         if (tmp2 < tmp) tmp  = tmp2;   
         audioChannels[_ch]->eof = tmp;
@@ -133,16 +134,13 @@ String makedisplay(int16_t number) {
     return tmp;
 } 
 
-
-
 /* --------------------------------------------------------------- */
-
 
 void update_display(uint8_t _channel, uint16_t _newval) {
   
  String msg;
  int16_t tmp = _newval;
- char cmd = 0x02;
+ char cmd = 0x02;      // this is the cmd byte / prefix for the Serial messages (ascii starting at 0x02).
  switch (MENU_PAGE[_channel]) {
    
      case FILESELECT: { // file

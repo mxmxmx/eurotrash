@@ -1,7 +1,12 @@
 /*
 *   eurotrash
-*   test 1
+*   dual wav player (test version).
 *
+*   files should be 16 bit stereo, 44.1kHz; file names 8.3 (SFN).
+*   max files = 128 (can be changed - see the respective #define (MAXFILES)
+*   a/the list of valid files will be generated during initialization.
+*
+*   SD card should be class 10.
 */
 
 
@@ -9,13 +14,13 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-//#include <Encoder.h>
-#include <rotaryplus.h>
+#include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
 
-#define HWSERIAL Serial1
+#define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
+#define BAUD 115200
 File root;
 
-/* ----------------------Audio API ---------------------- */
+/* ---------------------- Audio API --------------------- */
 
 AudioPlaySdWav           wav1, wav2, wav3, wav4;
 AudioPlaySdWav           *wav[4] = {&wav1, &wav2, &wav3, &wav4};
@@ -24,17 +29,17 @@ AudioEffectFade          *fade[4] = {&fade1, &fade2, &fade3, &fade4};
 AudioMixer4              mixL, mixR;
 AudioOutputI2S           dac;   
 
-AudioConnection          patchCord1(wav1, 0, fade1, 0);
-AudioConnection          patchCord2(wav2, 0, fade2, 0);
-AudioConnection          patchCord3(wav3, 0, fade3, 0);
-AudioConnection          patchCord4(wav4, 0, fade4, 0);
+AudioConnection          link_0(wav1, 0, fade1, 0);
+AudioConnection          link_1(wav2, 0, fade2, 0);
+AudioConnection          link_2(wav3, 0, fade3, 0);
+AudioConnection          link_3(wav4, 0, fade4, 0);
 
-AudioConnection          patchCord5(fade1, 0, mixL, 0);
-AudioConnection          patchCord6(fade2, 0, mixL, 1);
-AudioConnection          patchCord7(fade3, 0, mixR, 0);
-AudioConnection          patchCord8(fade4, 0, mixR, 1);
-AudioConnection          patchCord9(mixL, 0, dac, 0);
-AudioConnection          patchCord10(mixR, 0, dac, 1);
+AudioConnection          link_4(fade1, 0, mixL, 0);
+AudioConnection          link_5(fade2, 0, mixL, 1);
+AudioConnection          link_6(fade3, 0, mixR, 0);
+AudioConnection          link_7(fade4, 0, mixR, 1);
+AudioConnection          link_8(mixL, 0, dac, 0);
+AudioConnection          link_9(mixR, 0, dac, 1);
 
 /* ------------------------- pins ------------------------ */
 
@@ -44,10 +49,10 @@ AudioConnection          patchCord10(mixR, 0, dac, 1);
 #define EOL_L 20
 #define EOL_R 21
 
-#define CV1 A2
-#define CV2 A3
-#define CV3 A4
-#define CV4 A5
+#define CV1 16
+#define CV2 17
+#define CV3 18
+#define CV4 19
 
 #define BUTTON_R 15
 #define BUTTON_L 5 
@@ -56,11 +61,13 @@ AudioConnection          patchCord10(mixR, 0, dac, 1);
 #define ENC_R1 8 
 #define ENC_R2 6 
 
+/* CV inputs */
+#define numADC 4
+uint16_t CV[numADC];
+uint8_t ADC_cycle;
+/* encoders */ 
 Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}}; 
 
-uint16_t CVs[] = {CV1, CV2, CV3, CV4};
-uint8_t ADC_cycle;
-const uint8_t numADC = 4;
 
 /* ----------------------- timers + ISR stuff ------------------------ */
 
@@ -79,6 +86,8 @@ IntervalTimer UI_timer, ADC_timer;
 volatile uint8_t UI  = false;
 volatile uint8_t ADC = false;
 
+#define UI_RATE  15000  // UI update rate
+#define ADC_RATE 15000  // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { ADC = true; }
 
@@ -108,8 +117,8 @@ typedef struct audioChannel {
 
 struct audioChannel *audioChannels[CHANNELS];
 
-const uint8_t  FADE_IN  = 20;
-const uint16_t FADE_OUT = 200;
+const uint8_t  FADE_IN  = 20;   // fade in  (adjust to your liking)
+const uint16_t FADE_OUT = 200;  // fade out (ditto)
 uint8_t  FADE_LEFT  = true;
 uint8_t  FADE_RIGHT = true;
 uint32_t last_LCLK, last_RCLK;
@@ -119,9 +128,10 @@ uint32_t last_LCLK, last_RCLK;
 
 void setup() {
  
+  //analogReference(EXTERNAL);
   analogReadRes(12);
   analogReadAveraging(16);   
- 
+  /* clk inputs and switches need the pullups */
   pinMode(CLK_L, INPUT_PULLUP);
   pinMode(CLK_R, INPUT_PULLUP);
   pinMode(BUTTON_L, INPUT_PULLUP); 
@@ -129,7 +139,7 @@ void setup() {
   
   pinMode(EOL_L, OUTPUT);
   pinMode(EOL_R, OUTPUT);
- 
+  /* audio API */
   AudioMemory(15);
 
   SPI.setMOSI(7);
@@ -142,27 +152,28 @@ void setup() {
     }
   }
   delay(100);
-  
+  /* zero volume while we generate the file list */
   mixL.gain(0, 0);
   mixL.gain(1, 0);
   mixR.gain(0, 0);
   mixR.gain(1, 0);
   
   generate_file_list();
-
-  ADC_timer.begin(ADCtimerCallback, 15000); 
+  /* begin timers and HW serial */
+  ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
   
-  HWSERIAL.begin(115200);
+  HWSERIAL.begin(BAUD);
   HWSERIAL.print('\n');
   delay(10);
   
-  UI_timer.begin(UItimerCallback, 15000);
+  UI_timer.begin(UItimerCallback, UI_RATE);
   
-  // allocate memory for L/R
+  /* allocate memory for L/R + init */
   audioChannels[LEFT]  = (audioChannel*)malloc(sizeof(audioChannel));
   audioChannels[RIGHT] = (audioChannel*)malloc(sizeof(audioChannel));
   init_channels(INIT_FILE);
   
+  /* set volume */
   mixL.gain(0, audioChannels[LEFT]->_gain);
   mixL.gain(1, audioChannels[LEFT]->_gain);
   mixR.gain(0, audioChannels[RIGHT]->_gain);
@@ -183,6 +194,7 @@ void setup() {
 
 }
 
+/* main loop, wherein we mainly wait for the clock-flags */
 
 void loop() {
   
@@ -203,18 +215,18 @@ void loop() {
        last_RCLK = millis();
  
    }  
-  
-   /*if (millis() - last_LCLK > 1000) {
+  /*
+   if (millis() - last_LCLK > 1000) {
      
        LCLK = true;
        
-   }*/
-   
+   }
+   */
    // eof left?
    
    if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
         
-        fade1.fadeOut(FADE_OUT);
+        fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
         fade2.fadeOut(FADE_OUT);
         FADE_LEFT = true;
      
@@ -313,9 +325,15 @@ void loop() {
    
        ADC = false;
        ADC_cycle++;
-       if (ADC_cycle >= numADC) ADC_cycle = 0;
-       uint16_t x = analogRead(CVs[ADC_cycle]); 
-       //Serial.println(x);
+       if (ADC_cycle >= numADC)  ADC_cycle = 0; 
+       CV[ADC_cycle] = analogRead(ADC_cycle+0x10); 
+       /*if (!ADC_cycle) Serial.println(" ||| ");
+       else Serial.print(" || ");
+       Serial.print(CV[ADC_cycle]);
+       Serial.print(" -> ");
+       Serial.print(x);
+       */
+       
    }  
 }
 

@@ -1,4 +1,8 @@
-
+/*
+*       
+* some things to deal with the wav files. mainly opening + swapping the audio objects
+*
+*/
 
 void init_channels(uint8_t f) {
   
@@ -11,8 +15,8 @@ void init_channels(uint8_t f) {
         audioChannels[i]->pos0 = 0;
         audioChannels[i]->pos1 = CTRL_RESOLUTION;
         audioChannels[i]->ctrl_res = CTRL_RES[_file];
-        audioChannels[i]->ctrl_res = CTRL_RES[_file];
-        audioChannels[i]->eof =  CTRL_RES_EOF[_file] * CTRL_RESOLUTION;
+        audioChannels[i]->ctrl_res_eof = CTRL_RES_EOF[_file];
+        audioChannels[i]->eof = CTRL_RESOLUTION * CTRL_RES_EOF[_file];
         audioChannels[i]->_gain = DEFAULT_GAIN;  
         audioChannels[i]->swap = false;
   } 
@@ -25,9 +29,9 @@ void play_x(uint8_t _channel) {
   
   uint8_t _swap = (_channel*2) + audioChannels[_channel]->swap; // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)
   fade[_swap]->fadeIn(FADE_IN);                                 // fade in object 1-4
-  update_wav(_swap, _channel);                                  // and play 
+  next_wav(_swap, _channel);                                    // and play 
   
-   // now swap the file and fade out previous file:
+  /* now swap the file and fade out previous file: */
   if (audioChannels[_channel]->swap)  audioChannels[LEFT]->swap = false; 
   else                                audioChannels[LEFT]->swap = true;
   
@@ -40,7 +44,7 @@ void play_x(uint8_t _channel) {
 /* =============================================== */
 
 
-void update_wav(uint8_t _swap, uint8_t _channel) {
+void next_wav(uint8_t _swap, uint8_t _channel) {
   
        uint16_t _file = audioChannels[_channel]->file_wav;  // file #?
        uint32_t _playpos = audioChannels[_channel]->pos0 * audioChannels[_channel]->ctrl_res; // where to start from?
@@ -49,12 +53,12 @@ void update_wav(uint8_t _swap, uint8_t _channel) {
        
        wav[_swap]->seek(&playthis[0], _playpos>>9);  // -> play file X from pos Y
        
-       // now update channel info:
+       /* now update channel info: */
        audioChannels[_channel]->file_len = FILE_LEN[_file];
        audioChannels[_channel]->ctrl_res = CTRL_RES[_file];
        audioChannels[_channel]->ctrl_res_eof = CTRL_RES_EOF[_file];
        
-       // and update EOF:
+       /* and update EOF: */
        uint32_t tmp, tmp2;
        tmp = audioChannels[_channel]->pos1 * audioChannels[_channel]->ctrl_res_eof; // end position 
        tmp2 = (CTRL_RESOLUTION - audioChannels[_channel]->pos0) * audioChannels[_channel]->ctrl_res_eof; // start position
@@ -63,8 +67,9 @@ void update_wav(uint8_t _swap, uint8_t _channel) {
   
 }  
 
-/* --------------------------------------------------------------- */
-void generate_file_list() {
+/* =============================================== */
+
+void generate_file_list() {  // to do - sort alphabetically?
   
   uint8_t len;
   uint32_t file_len;
@@ -91,7 +96,7 @@ void generate_file_list() {
                       CTRL_RES[FILECOUNT]  = file_len / CTRL_RESOLUTION; // ctrl resolution pos0/bytes/
                       CTRL_RES_EOF[FILECOUNT] = wav1.lengthMillis() / CTRL_RESOLUTION; // ctrl resolution pos1/millisec
                       wav1.stop();
-                      // for the display, get rid of .wav extension + right justify 
+                      /* for the display, get rid of .wav extension + right justify */
                       int8_t justify = DISPLAY_LEN - len;
                       if (justify < 0) justify = 0; 
                       for (int i = justify; i < DISPLAY_LEN; i++) {  
@@ -112,4 +117,4 @@ void generate_file_list() {
   root.close();
 }
   
-
+/* =============================================== */

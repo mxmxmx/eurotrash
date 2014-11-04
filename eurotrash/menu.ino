@@ -59,7 +59,7 @@ void update_enc() {
         uint32_t tmp, tmp2; 
         tmp  = audioChannels[_ch]->pos1;                   // length
         tmp2 = CTRL_RESOLUTION - audioChannels[_ch]->pos0; // max length
-        if (tmp > tmp2) tmp = tmp2
+        if (tmp > tmp2) tmp = tmp2;
         audioChannels[_ch]->eof = tmp * audioChannels[_ch]->ctrl_res_eof;
   }  
 }  

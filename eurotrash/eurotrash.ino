@@ -6,7 +6,7 @@
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
-*   SD card should be class 10.
+*   micro SD card should be class 10.
 */
 
 
@@ -46,8 +46,8 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 #define CLK_L 2
 #define CLK_R 0
 
-#define EOL_L 20
-#define EOL_R 21
+#define EOF_L 20
+#define EOF_R 21
 
 #define CV1 16
 #define CV2 17
@@ -105,7 +105,7 @@ typedef struct audioChannel {
     uint8_t     file_wav;      // fileSelect
     uint32_t    pos0;          // file start pos
     uint32_t    pos1;          // end pos
-    uint32_t    file_len;      // length in bytes
+    uint32_t    file_len;      // length in bytes (superfluous -- ?)
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
@@ -121,7 +121,8 @@ const uint8_t  FADE_IN  = 20;   // fade in  (adjust to your liking)
 const uint16_t FADE_OUT = 200;  // fade out (ditto)
 uint8_t  FADE_LEFT  = true;
 uint8_t  FADE_RIGHT = true;
-uint32_t last_LCLK, last_RCLK;
+uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
+const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 
 
 /* ------------------------------------------------------ */
@@ -137,8 +138,12 @@ void setup() {
   pinMode(BUTTON_L, INPUT_PULLUP); 
   pinMode(BUTTON_R, INPUT_PULLUP); 
   
-  pinMode(EOL_L, OUTPUT);
-  pinMode(EOL_R, OUTPUT);
+  pinMode(EOF_L, OUTPUT);
+  pinMode(EOF_R, OUTPUT);
+  
+  digitalWrite(EOF_L, LOW);
+  digitalWrite(EOF_R, LOW);
+  
   /* audio API */
   AudioMemory(15);
 
@@ -228,6 +233,8 @@ void loop() {
         
         fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
         fade2.fadeOut(FADE_OUT);
+        digitalWriteFast(EOF_L, HIGH);  
+        last_EOF_L = millis();
         FADE_LEFT = true;
      
    } 
@@ -255,6 +262,8 @@ void loop() {
         
         fade3.fadeOut(FADE_OUT);
         fade4.fadeOut(FADE_OUT);
+        digitalWriteFast(EOF_R, HIGH);
+        last_EOF_R = millis();
         FADE_RIGHT = true;
      
    }
@@ -331,10 +340,30 @@ void loop() {
        else Serial.print(" || ");
        Serial.print(CV[ADC_cycle]);
        Serial.print(" -> ");
-       Serial.print(x);
+       Serial.print(ADC_cycle);
        */
-       
    }  
+   
+   if (FADE_LEFT && (millis() - last_EOF_L > TRIG_LENGTH)) digitalWriteFast(EOF_L, LOW); 
+   
+   if (LCLK) {  
+  
+       play_x(LEFT);
+       LCLK = false;
+       FADE_LEFT = false;
+       last_LCLK = millis();
+ 
+   } 
+   if (RCLK) { 
+ 
+       play_x(RIGHT);
+       RCLK = false;
+       FADE_RIGHT = false;
+       last_RCLK = millis();
+ 
+   } 
+   
+   if (FADE_RIGHT && (millis() - last_EOF_R > TRIG_LENGTH)) digitalWriteFast(EOF_R, LOW);
 }
 
 /* ------------------------------------------------------------ */

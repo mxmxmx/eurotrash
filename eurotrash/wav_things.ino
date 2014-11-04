@@ -53,18 +53,17 @@ void next_wav(uint8_t _swap, uint8_t _channel) {
        
        wav[_swap]->seek(&playthis[0], _playpos>>9);  // -> play file X from pos Y
        
-       /* now update channel info: */
-       audioChannels[_channel]->file_len = FILE_LEN[_file];
+       /* now update channel data: */
+       audioChannels[_channel]->file_len = FILE_LEN[_file]; // ?
        audioChannels[_channel]->ctrl_res = CTRL_RES[_file];
        audioChannels[_channel]->ctrl_res_eof = CTRL_RES_EOF[_file];
        
        /* and update EOF: */
-       uint32_t tmp, tmp2;
-       tmp = audioChannels[_channel]->pos1 * audioChannels[_channel]->ctrl_res_eof; // end position 
-       tmp2 = (CTRL_RESOLUTION - audioChannels[_channel]->pos0) * audioChannels[_channel]->ctrl_res_eof; // start position
-       if (tmp2 < tmp) tmp = tmp2;   
-       audioChannels[_channel]->eof = tmp;
-  
+       //uint32_t tmp, tmp2;
+       //tmp = audioChannels[_channel]->pos1;
+       //tmp2 = (CTRL_RESOLUTION - audioChannels[_channel]->pos0);
+       //if (tmp2 < tmp) tmp = tmp2;   
+       //audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof; 
 }  
 
 /* =============================================== */

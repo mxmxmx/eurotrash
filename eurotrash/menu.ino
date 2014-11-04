@@ -56,11 +56,11 @@ void update_enc() {
         encoderdata = encoder[_ch].pos()>>SLOW;
         update_display(_ch, encoderdata);
         /* update EOF */
-        uint32_t tmp, tmp2;
-        tmp = audioChannels[_ch]->pos1 * audioChannels[_ch]->ctrl_res_eof;                      // end pos 
-        tmp2 = (CTRL_RESOLUTION - audioChannels[_ch]->pos0) * audioChannels[_ch]->ctrl_res_eof; // start pos
-        if (tmp2 < tmp) tmp  = tmp2;   
-        audioChannels[_ch]->eof = tmp;
+        uint32_t tmp, tmp2; 
+        tmp  = audioChannels[_ch]->pos1;                   // length
+        tmp2 = CTRL_RESOLUTION - audioChannels[_ch]->pos0; // max length
+        if (tmp > tmp2) tmp = tmp2
+        audioChannels[_ch]->eof = tmp * audioChannels[_ch]->ctrl_res_eof;
   }  
 }  
 

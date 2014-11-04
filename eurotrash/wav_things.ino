@@ -24,46 +24,38 @@ void init_channels(uint8_t f) {
 
 /* =============================================== */
 
-
 void play_x(uint8_t _channel) {
   
-  uint8_t _swap = (_channel*2) + audioChannels[_channel]->swap; // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)
-  fade[_swap]->fadeIn(FADE_IN);                                 // fade in object 1-4
-  next_wav(_swap, _channel);                                    // and play 
+      uint8_t _swap, _select;
+      _swap   = audioChannels[_channel]->swap;                
+      _select = (_channel*2) + _swap;                        // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)
+      fade[_select]->fadeIn(FADE_IN);                        // fade in object 1-4
+      next_wav(_select, _channel);                           // and play 
   
-  /* now swap the file and fade out previous file: */
-  if (audioChannels[_channel]->swap)  audioChannels[LEFT]->swap = false; 
-  else                                audioChannels[LEFT]->swap = true;
-  
-  _swap = (_channel*2) + audioChannels[_channel]->swap;
-  fade[audioChannels[_channel]->swap]->fadeOut(FADE_OUT);
+      /* now swap the file and fade out previous file: */
+      _swap = ~_swap & 1u;
+      _select = (_channel*2) + _swap;
+      fade[_select]->fadeOut(FADE_OUT);
+      audioChannels[_channel]->swap = _swap;
   
 }
  
-
 /* =============================================== */
 
 
-void next_wav(uint8_t _swap, uint8_t _channel) {
+void next_wav(uint8_t _select, uint8_t _channel) {
   
        uint16_t _file = audioChannels[_channel]->file_wav;  // file #?
        uint32_t _playpos = audioChannels[_channel]->pos0 * audioChannels[_channel]->ctrl_res; // where to start from?
        //if (_playpos > audioChannels[_channel]->file_len) _playpos = 0;   
        String playthis = FILES[_file];  // what's the filename?
        
-       wav[_swap]->seek(&playthis[0], _playpos>>9);  // -> play file X from pos Y
+       wav[_select]->seek(&playthis[0], _playpos>>9);  // -> play file X from pos Y
        
        /* now update channel data: */
        audioChannels[_channel]->file_len = FILE_LEN[_file]; // ?
        audioChannels[_channel]->ctrl_res = CTRL_RES[_file];
        audioChannels[_channel]->ctrl_res_eof = CTRL_RES_EOF[_file];
-       
-       /* and update EOF: */
-       //uint32_t tmp, tmp2;
-       //tmp = audioChannels[_channel]->pos1;
-       //tmp2 = (CTRL_RESOLUTION - audioChannels[_channel]->pos0);
-       //if (tmp2 < tmp) tmp = tmp2;   
-       //audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof; 
 }  
 
 /* =============================================== */

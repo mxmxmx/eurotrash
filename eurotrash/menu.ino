@@ -47,20 +47,18 @@ void right_encoder_ISR() {
 void update_enc() {
   
   int16_t encoderdata;
-  uint8_t _ch = ENCODER_SWAP;
-  
-  if (_ch) ENCODER_SWAP = LEFT;  
-  else     ENCODER_SWAP = RIGHT;
-  
-  if (encoder[_ch].change()) { 
-        encoderdata = encoder[_ch].pos()>>SLOW;
-        update_display(_ch, encoderdata);
+  uint8_t _channel = ENCODER_SWAP;
+  ENCODER_SWAP = ~_channel & 1u; // toggle L/R
+   
+  if (encoder[_channel].change()) { 
+        encoderdata = encoder[_channel].pos()>>SLOW;
+        update_display(_channel, encoderdata);
         /* update EOF */
         uint32_t tmp, tmp2; 
-        tmp  = audioChannels[_ch]->pos1;                   // length
-        tmp2 = CTRL_RESOLUTION - audioChannels[_ch]->pos0; // max length
+        tmp  = audioChannels[_channel]->pos1;                   // length
+        tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
         if (tmp > tmp2) tmp = tmp2;
-        audioChannels[_ch]->eof = tmp * audioChannels[_ch]->ctrl_res_eof;
+        audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
   }  
 }  
 

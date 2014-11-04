@@ -203,31 +203,17 @@ void setup() {
 
 void loop() {
   
-    if (LCLK) {  
-     
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   
-   if (RCLK) { 
-     
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   }  
-  /*
+   /*
    if (millis() - last_LCLK > 1000) {
      
        LCLK = true;
        
    }
    */
-   // eof left?
+   
+   leftright();
+
+   /* eof left? */
    
    if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
         
@@ -239,24 +225,9 @@ void loop() {
      
    } 
        
-   if (LCLK) {  
-     
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   if (RCLK) { 
-     
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   } 
+   leftright();
    
-   // eof right?
+   /* eof right? */
    
    if (!FADE_RIGHT && ((millis() - last_RCLK > audioChannels[RIGHT]->eof))) {
         
@@ -268,44 +239,14 @@ void loop() {
      
    }
    
-   if (LCLK) {  
-     
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   if (RCLK) { 
-     
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   } 
+   leftright();
    
    if (UI) {
        update_enc();
        UI = false;
    }
    
-   if (LCLK) {  
-     
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   if (RCLK) { 
-     
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   } 
+   leftright();
    
    if (BUTTON && (millis() - LASTBUTTON > DEBOUNCE)) {
        buttons(BUTTON-0x01);
@@ -313,22 +254,7 @@ void loop() {
        LASTBUTTON = millis();  
    } 
    
-   if (LCLK) {  
-  
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   if (RCLK) { 
- 
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   } 
+   leftright();
    
    if (ADC) {
    
@@ -344,9 +270,21 @@ void loop() {
        */
    }  
    
+   leftright();
+    
    if (FADE_LEFT && (millis() - last_EOF_L > TRIG_LENGTH)) digitalWriteFast(EOF_L, LOW); 
    
-   if (LCLK) {  
+   leftright();
+   
+   if (FADE_RIGHT && (millis() - last_EOF_R > TRIG_LENGTH)) digitalWriteFast(EOF_R, LOW);
+}
+
+/* ------------------------------------------------------------ */
+
+
+void leftright() {
+  
+ if (LCLK) {  // clock?
   
        play_x(LEFT);
        LCLK = false;
@@ -354,7 +292,7 @@ void loop() {
        last_LCLK = millis();
  
    } 
-   if (RCLK) { 
+   if (RCLK) { // clock?
  
        play_x(RIGHT);
        RCLK = false;
@@ -362,9 +300,6 @@ void loop() {
        last_RCLK = millis();
  
    } 
-   
-   if (FADE_RIGHT && (millis() - last_EOF_R > TRIG_LENGTH)) digitalWriteFast(EOF_R, LOW);
 }
 
 /* ------------------------------------------------------------ */
-

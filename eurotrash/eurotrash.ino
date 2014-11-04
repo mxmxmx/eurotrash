@@ -106,10 +106,10 @@ typedef struct audioChannel {
     uint32_t    pos0;          // file start pos
     uint32_t    pos1;          // end pos
     uint32_t    file_len;      // length in bytes
-    uint32_t    ctrl_res;      // play head resolution ( -> encoders)
-    uint32_t    ctrl_res_eof;  // eof resolution ( -> encoders)
+    uint32_t    ctrl_res;      // start pos resolution (in bytes)
+    uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
-    uint32_t     eof;          // end of file
+    uint32_t     eof;          // end of file (in ms)
     //uint8_t     mode;        // one-shot / loop [not now] 
     uint8_t     swap;          // ping-pong file (1/2; 3/4)
 

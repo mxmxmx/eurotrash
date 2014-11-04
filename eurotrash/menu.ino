@@ -15,7 +15,7 @@ uint32_t CTRL_RES_EOF[MAXFILES];
 float DEFAULT_GAIN = 0.4;            // adjust default volume [0.0 - 1.0]
 
 uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
-const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file; adjust to your liking (< 9999)
+const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
 uint8_t SLOW = 0;                    // encoder response
 int16_t prev_encoderdata[]  = {-999, -999};
 

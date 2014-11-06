@@ -265,7 +265,7 @@ void loop() {
    
        ADC = false;
        ADC_cycle++;
-       if (ADC_cycle < numADC)  ADC_cycle = 0; 
+       if (ADC_cycle >= numADC)  ADC_cycle = 0; 
        CV[ADC_cycle] = analogRead(ADC_cycle+0x10); 
        /*if (!ADC_cycle) Serial.println(" ||| ");
        else Serial.print(" || ");

@@ -9,7 +9,7 @@ uint8_t FILECOUNT;
 const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
 String FILES[MAXFILES]; 
 String DISPLAYFILES[MAXFILES];
-uint32_t FILE_LEN[MAXFILES];
+//uint32_t FILE_LEN[MAXFILES];
 uint32_t CTRL_RES[MAXFILES];
 uint32_t CTRL_RES_EOF[MAXFILES];
 float DEFAULT_GAIN = 0.4;            // adjust default volume [0.0 - 1.0]
@@ -53,16 +53,20 @@ void update_enc() {
   if (encoder[_channel].change()) { 
         encoderdata = encoder[_channel].pos()>>SLOW;
         update_display(_channel, encoderdata);
+        
         /* update EOF */
-        uint32_t tmp, tmp2; 
-        tmp  = audioChannels[_channel]->pos1;                   // length
-        tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
-        if (tmp > tmp2) tmp = tmp2;
-        audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
+        if (MENU_PAGE[_channel] != FILESELECT) {
+          
+              uint32_t tmp, tmp2; 
+              tmp  = audioChannels[_channel]->pos1;                   // length
+              tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
+              if (tmp > tmp2) tmp = tmp2;
+              audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
+        }
   }  
 }  
 
-/* -------------------------------------------------- */
+/* --------------------------------------------------------------- */
 
 void buttons(uint8_t _channel) {
   
@@ -70,6 +74,7 @@ void buttons(uint8_t _channel) {
   switch (MENU_PAGE[_ch]) {
     
   case FILESELECT: { // update file  
+  
           uint8_t _file = audioChannels[_ch]->file_wav;
           if (filedisplay[_ch] != _file) update_channel(audioChannels[_ch]);
           else {
@@ -82,6 +87,7 @@ void buttons(uint8_t _channel) {
   }
   
   case STARTPOS: { // start pos
+  
           MENU_PAGE[_ch] = ENDPOS;
           int16_t end_pos = audioChannels[_ch]->pos1;
           encoder[_channel].setPos(end_pos<<SLOW);
@@ -90,6 +96,7 @@ void buttons(uint8_t _channel) {
   } 
   
   case ENDPOS: { // end pos
+  
           MENU_PAGE[_ch] = FILESELECT;
           int8_t _file = audioChannels[_ch]->file_wav;
           encoder[_channel].setPos(_file<<SLOW);
@@ -99,22 +106,22 @@ void buttons(uint8_t _channel) {
   
   case MODE: {
           
-           break;
+          break;
         
    }
      
-   default: break;  
+  default: break;  
  } 
 }  
 
-
+/* --------------------------------------------------------------- */
 
 void update_channel(struct audioChannel* _ch) {
         
         uint8_t _id   = _ch->id;    // L or R ?
         uint8_t _file = filedisplay[_id];
         _ch->file_wav = _file;      // select file
-        _ch->file_len = FILE_LEN[_file];
+        //_ch->file_len = FILE_LEN[_file];
         update_display(_id, _file); // update menu
 
 }  

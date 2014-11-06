@@ -11,7 +11,7 @@ void init_channels(uint8_t f) {
         
         audioChannels[i]->id = i;
         audioChannels[i]->file_wav = _file;
-        audioChannels[i]->file_len = FILE_LEN[_file];
+        //audioChannels[i]->file_len = FILE_LEN[_file];
         audioChannels[i]->pos0 = 0;
         audioChannels[i]->pos1 = CTRL_RESOLUTION;
         audioChannels[i]->ctrl_res = CTRL_RES[_file];
@@ -53,7 +53,7 @@ void next_wav(uint8_t _select, uint8_t _channel) {
        wav[_select]->seek(&playthis[0], _playpos>>9);  // -> play file X from pos Y
        
        /* now update channel data: */
-       audioChannels[_channel]->file_len = FILE_LEN[_file]; // ?
+       //audioChannels[_channel]->file_len = FILE_LEN[_file]; // ?
        audioChannels[_channel]->ctrl_res = CTRL_RES[_file];
        audioChannels[_channel]->ctrl_res_eof = CTRL_RES_EOF[_file];
 }  
@@ -83,7 +83,7 @@ void generate_file_list() {  // to do - sort alphabetically?
                       wav1.play(_name);
                       delay(15);
                       file_len = wav1.lengthBytes();
-                      FILE_LEN[FILECOUNT]  = file_len;
+                      //FILE_LEN[FILECOUNT]  = file_len;
                       CTRL_RES[FILECOUNT]  = file_len / CTRL_RESOLUTION; // ctrl resolution pos0/bytes/
                       CTRL_RES_EOF[FILECOUNT] = wav1.lengthMillis() / CTRL_RESOLUTION; // ctrl resolution pos1/millisec
                       wav1.stop();

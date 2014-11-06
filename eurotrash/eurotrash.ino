@@ -2,11 +2,16 @@
 *   eurotrash
 *   dual wav player (test version).
 *
-*   files should be 16 bit stereo, 44.1kHz; file names 8.3 (SFN).
+*   files should be 16 bit stereo, 44.1kHz; file names 8.3 (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
 *   micro SD card should be class 10.
+*
+*   to do:
+*   - move to SD raw/mono
+*   - open files by index
+*   - move to ADC/DMA
 */
 
 
@@ -105,7 +110,7 @@ typedef struct audioChannel {
     uint8_t     file_wav;      // fileSelect
     uint32_t    pos0;          // file start pos
     uint32_t    pos1;          // end pos
-    uint32_t    file_len;      // length in bytes (superfluous -- ?)
+    //uint32_t    file_len;      // length in bytes (superfluous)
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
@@ -260,7 +265,7 @@ void loop() {
    
        ADC = false;
        ADC_cycle++;
-       if (ADC_cycle >= numADC)  ADC_cycle = 0; 
+       if (ADC_cycle < numADC)  ADC_cycle = 0; 
        CV[ADC_cycle] = analogRead(ADC_cycle+0x10); 
        /*if (!ADC_cycle) Serial.println(" ||| ");
        else Serial.print(" || ");

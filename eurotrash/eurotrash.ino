@@ -110,7 +110,6 @@ typedef struct audioChannel {
     uint8_t     file_wav;      // fileSelect
     uint32_t    pos0;          // file start pos
     uint32_t    pos1;          // end pos
-    //uint32_t    file_len;      // length in bytes (superfluous)
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
@@ -126,6 +125,7 @@ const uint8_t  FADE_IN  = 20;   // fade in  (adjust to your liking)
 const uint16_t FADE_OUT = 200;  // fade out (ditto)
 uint8_t  FADE_LEFT  = true;
 uint8_t  FADE_RIGHT = true;
+uint8_t  EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
 const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 
@@ -222,11 +222,11 @@ void loop() {
    
    if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
         
-        fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
-        fade2.fadeOut(FADE_OUT);
         digitalWriteFast(EOF_L, HIGH);  
+        fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
+        fade2.fadeOut(FADE_OUT);      
         last_EOF_L = millis();
-        FADE_LEFT = true;
+        EOF_L_OFF = FADE_LEFT = true;
      
    } 
        
@@ -236,12 +236,11 @@ void loop() {
    
    if (!FADE_RIGHT && ((millis() - last_RCLK > audioChannels[RIGHT]->eof))) {
         
+        digitalWriteFast(EOF_R, HIGH);
         fade3.fadeOut(FADE_OUT);
         fade4.fadeOut(FADE_OUT);
-        digitalWriteFast(EOF_R, HIGH);
         last_EOF_R = millis();
-        FADE_RIGHT = true;
-     
+        EOF_R_OFF = FADE_RIGHT = true;
    }
    
    leftright();
@@ -277,11 +276,11 @@ void loop() {
    
    leftright();
     
-   if (FADE_LEFT && (millis() - last_EOF_L > TRIG_LENGTH)) digitalWriteFast(EOF_L, LOW); 
+   if (EOF_L_OFF && (millis() - last_EOF_L > TRIG_LENGTH))  { digitalWriteFast(EOF_L, LOW); EOF_L_OFF = false; }
    
    leftright();
    
-   if (FADE_RIGHT && (millis() - last_EOF_R > TRIG_LENGTH)) digitalWriteFast(EOF_R, LOW);
+   if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
 }
 
 /* ------------------------------------------------------------ */

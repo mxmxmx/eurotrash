@@ -11,7 +11,6 @@ void init_channels(uint8_t f) {
         
         audioChannels[i]->id = i;
         audioChannels[i]->file_wav = _file;
-        //audioChannels[i]->file_len = FILE_LEN[_file];
         audioChannels[i]->pos0 = 0;
         audioChannels[i]->pos1 = CTRL_RESOLUTION;
         audioChannels[i]->ctrl_res = CTRL_RES[_file];

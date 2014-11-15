@@ -47,8 +47,8 @@ ICs/semis:
 voltage regulators:
 
 - ADP150 (3v3 regulator, TSOT): 1x
-- LM1117-33 (3v3 LDO reg., DPAK): 1x
-- LM1117-50 (5v0 LDO reg., DPAK): 1x
+- LM1117-33 (3v3 LDO reg., SOT-223): 1x
+- LM1117-50 (5v0 LDO reg., SOT-223): 1x
 - 79L05 -5v (TO-92): 1x (or LM4040-5 + 500R (0805)) (****)
 
 

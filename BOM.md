@@ -39,7 +39,7 @@ ICs/semis:
 - BAT54s (schottky diode, sot-23) : 4x (mouser # 78-BAT54S-G3-08)
 - MMBT3904 (NPN trans., sot-23) : 2x (mouser # 512-MMBT3904)
 - SM5817 diodes : 2x (mouser # 833-SM5817PL-TP)
-- _TL072_ (SOIC) : 2x (*)
+- **TL072** (SOIC) : 2x (*)
 - TL074 (SOIC) : 1x
 - PCM5102a (TSSOP) : 1x (mouser # 595-PCM5102APWR)
 
@@ -49,7 +49,7 @@ voltage regulators:
 - ADP150 (3v3 regulator, TSOT): 1x (mouser # 584-ADP150AUJZ-3.3R7)
 - LM1117-33 (3v3 LDO reg., SOT-223): 1x (mouser # 511-LD1117S33)
 - LM1117-50 (5v0 LDO reg., SOT-223): 1x (mouser # 511-LD1117S50)
-- _79L05_ -5v (TO-92): 1x (_better choice would be: LM4040-5_ + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
+- **79L05** -5v (TO-92): 1x (**better choice would be: LM4040-5** + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
 
 
 misc:
@@ -62,12 +62,12 @@ misc:
 - 2x3 RM2.54 pin header (ISP)
 - 2x5 RM2.54 pin header (eurorack power connector)
 - molex micro SD card socket (# 502774-0891, mouser # 538-502774-0891)
-- _winbond W25Q128FV_ (SPI flash) (**)
+- **winbond W25Q128FV** (SPI flash) (**)
 
 - jacks: 10 kobiconn / thonkiconn
 - rotary encoder w/switch: 2x (e.g. mouser # 652-PEC11R-4220F-S24 (e-o-l); i was using/prefer PEC11-4215K-S0024)
 - 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) 
-- _8 pin header for oled_ + 8 pin socket (low profile), RM2.54 (***)
+- **8 pin header for oled** + 8 pin socket (low profile), RM2.54 (***)
 
 notes: 
 

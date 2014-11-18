@@ -1,4 +1,4 @@
-/* BOM for eurotrash wav player */
+**/* BOM for eurotrash wav player */**
 
 
 

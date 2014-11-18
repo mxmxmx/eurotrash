@@ -2,7 +2,7 @@
 
 
 
-0805 resistors:
+# 0805 resistors:
 
 - 100R :         4x 
 - 220R :         2x 
@@ -14,11 +14,11 @@
 - 33k :		 6x	
 - 100k :         12x
 
-1206: 
+# 1206: 
 
 - 10R : 1x (or use 1206 ferrit bead, rated 1A. or if you prefer 0805, that'll be ok, too)
 
-0805 caps (16V or better):
+# 0805 caps (16V or better):
 
 - 20pf :          2x (NP0/C0G, ceramic) 
 - 3n3  :          2x (NP0/C0G, may be 1206)
@@ -28,31 +28,31 @@
 - 2.2uf:	  2x (ceramic, may be 1206)
 - 10uf :          2x (ceramic, or tantal)	  
 
-caps (electrolytic), through hole (25V or better):
+# caps (electrolytic), through hole (25V or better):
 
 - 10uf : 	  1x
 - 22uf :	  4x
 
 		
-ICs/semis:
+# ICs/semis:
 
 - BAT54s (schottky diode, sot-23) : 4x (mouser # 78-BAT54S-G3-08)
 - MMBT3904 (NPN trans., sot-23) : 2x (mouser # 512-MMBT3904)
 - SM5817 diodes : 2x (mouser # 833-SM5817PL-TP)
-- TL072 (SOIC) : 2x (*)
+**- TL072 (SOIC) : 2x (*)**
 - TL074 (SOIC) : 1x
 - PCM5102a (TSSOP) : 1x (mouser # 595-PCM5102APWR)
 
 
-voltage regulators:
+# voltage regulators:
 
 - ADP150 (3v3 regulator, TSOT): 1x (mouser # 584-ADP150AUJZ-3.3R7)
 - LM1117-33 (3v3 LDO reg., SOT-223): 1x (mouser # 511-LD1117S33)
 - LM1117-50 (5v0 LDO reg., SOT-223): 1x (mouser # 511-LD1117S50)
-- 79L05 -5v (TO-92): 1x (better choice would be: LM4040-5 + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
+**- 79L05 -5v (TO-92): 1x (better choice would be: LM4040-5 + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)**
 
 
-misc:
+# misc:
 
 - inductor 10uH (SMD/1206) (mouser # 81-LQH31MN100J03L)
 - 16MHz crystal (HC/49us): 1x (mouser # 59-FOXS160-20-LF)
@@ -62,14 +62,14 @@ misc:
 - 2x3 RM2.54 pin header (ISP)
 - 2x5 RM2.54 pin header (eurorack power connector)
 - molex micro SD card socket (# 502774-0891, mouser # 538-502774-0891)
-- winbond W25Q128FV (SPI flash) (**)
+**- winbond W25Q128FV (SPI flash) (**)**
 
 - jacks: 10 kobiconn / thonkiconn
 - rotary encoder w/switch: 2x (e.g. mouser # 652-PEC11R-4220F-S24 (e-o-l); i was using/prefer PEC11-4215K-S0024)
 - 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) 
-- 8 pin header for oled + 8 pin socket (low profile), RM2.54 (***)
+**- 8 pin header for oled + 8 pin socket (low profile), RM2.54 (***)**
 
-notes: 
+# notes: 
 
 (*) something fancier can be used for the audio output, of course (one of the dual op amps is for audio out, 
 the other is used for the digital outputs). 

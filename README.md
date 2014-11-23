@@ -13,4 +13,4 @@ teensy 3.1 / pcm5102a ; atmega328 + 128x32 oled
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 
-![My image](https://farm4.staticflickr.com/3934/15369323528_430af263f9_c.jpg)
+![My image](https://farm8.staticflickr.com/7556/15847752621_464320a658_b.jpg)

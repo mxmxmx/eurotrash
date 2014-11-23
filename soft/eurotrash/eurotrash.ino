@@ -9,7 +9,8 @@
 *   micro SD card should be class 10.
 *
 *   to do:
-*   - move to SD raw/mono
+*   - EOF CV
+*   - move to SD raw/mono 
 *   - open files by index
 *   - move to ADC/DMA
 */
@@ -68,8 +69,13 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 
 /* CV inputs */
 #define numADC 4
-uint16_t CV[numADC];
+#define ADC_RES 12
+#define ADC_CTRL_RES pow(2,ADC_RES) - 1
+
+int16_t CV[numADC];
 uint8_t ADC_cycle;
+uint16_t HALFSCALE = 0; 
+
 /* encoders */ 
 Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}}; 
 
@@ -114,7 +120,6 @@ typedef struct audioChannel {
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
     uint32_t     eof;          // end of file (in ms)
-    //uint8_t     mode;        // one-shot / loop [not now] 
     uint8_t     swap;          // ping-pong file (1/2; 3/4)
 
 } audioChannel;
@@ -123,9 +128,7 @@ struct audioChannel *audioChannels[CHANNELS];
 
 const uint8_t  FADE_IN  = 20;   // fade in  (adjust to your liking)
 const uint16_t FADE_OUT = 200;  // fade out (ditto)
-uint8_t  FADE_LEFT  = true;
-uint8_t  FADE_RIGHT = true;
-uint8_t  EOF_L_OFF, EOF_R_OFF;
+uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
 const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 
@@ -135,7 +138,7 @@ const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 void setup() {
  
   //analogReference(EXTERNAL);
-  analogReadRes(12);
+  analogReadRes(ADC_RES);
   analogReadAveraging(16);   
   /* clk inputs and switches need the pullups */
   pinMode(CLK_L, INPUT_PULLUP);
@@ -202,19 +205,28 @@ void setup() {
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
 
+  for (int i = 0; i < 10; i++) {
+   
+       uint16_t x = analogRead(CV3);
+       HALFSCALE += x;     
+       delay(10);
+  } 
+  
+  HALFSCALE = HALFSCALE / 10;
+
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */
 
 void loop() {
   
-   /*
-   if (millis() - last_LCLK > 1000) {
+   
+  /*if (millis() - last_LCLK > 1000) {
      
        LCLK = true;
        
-   }
-   */
+   }*/
+   
    
    leftright();
 
@@ -265,7 +277,8 @@ void loop() {
        ADC = false;
        ADC_cycle++;
        if (ADC_cycle >= numADC)  ADC_cycle = 0; 
-       CV[ADC_cycle] = analogRead(ADC_cycle+0x10); 
+       CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
+       
        /*if (!ADC_cycle) Serial.println(" ||| ");
        else Serial.print(" || ");
        Serial.print(CV[ADC_cycle]);

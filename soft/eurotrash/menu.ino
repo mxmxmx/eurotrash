@@ -7,12 +7,13 @@
 #define MAXFILES 128                 // we don't allow more than 128 files (for no particular reason); banks? (but would just add more menu pages)
 uint8_t FILECOUNT;
 const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
+/* misc arrays */
 String FILES[MAXFILES]; 
 String DISPLAYFILES[MAXFILES];
-//uint32_t FILE_LEN[MAXFILES];
+uint32_t FILE_LEN[MAXFILES];
 uint32_t CTRL_RES[MAXFILES];
 uint32_t CTRL_RES_EOF[MAXFILES];
-float DEFAULT_GAIN = 0.4;            // adjust default volume [0.0 - 1.0]
+float DEFAULT_GAIN = 0.6;            // adjust default volume [0.0 - 1.0]
 
 uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
 const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
@@ -118,11 +119,10 @@ void buttons(uint8_t _channel) {
 
 void update_channel(struct audioChannel* _ch) {
         
-        uint8_t _id   = _ch->id;    // L or R ?
-        uint8_t _file = filedisplay[_id];
-        _ch->file_wav = _file;      // select file
-        //_ch->file_len = FILE_LEN[_file];
-        update_display(_id, _file); // update menu
+        uint8_t _id   = _ch->id;          // L or R ?
+        uint8_t _file = filedisplay[_id]; // file #
+        _ch->file_wav = _file;            // select file
+        update_display(_id, _file);       // update menu
 
 }  
 

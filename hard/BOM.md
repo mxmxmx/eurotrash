@@ -63,9 +63,9 @@ misc:
 - 2x5 RM2.54 pin header (eurorack power connector)
 - molex micro SD card socket (# 502774-0891, mouser # 538-502774-0891)
 - **winbond W25Q128FV** (SPI flash) (**)
-
 - jacks: 10 kobiconn / thonkiconn
-- rotary encoder w/switch: 2x (for instance: 652-PEC11R-4215F-S24 (15 mm shaft, flat); 652-PEC11R-4215K-S24 (15 mm shaft,      knurled); 652-PEC11R-4220F-S24 (20 mm, flat), 652-PEC11R-4220K-S24 (20 mm, knurled), etc)
+- rotary encoder w/switch: 2x (for instance: 652-PEC11R-4215F-S24 (15 mm, 'D' shaft); 652-PEC11R-4215K-S24 (15 mm shaft,      knurled); 652-PEC11R-4220F-S24 (20 mm, 'D'), 652-PEC11R-4220K-S24 (20 mm, knurled), etc)
+- knobs (to match): 2x (ideally, with small(ish) diameter (12mm or so max) and no indication line. Cliff K88, for instance, are fairly nice/suitable)
 - 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) 
 - **8 pin header for oled** + 8 pin socket (low profile), RM2.54 (***)
 

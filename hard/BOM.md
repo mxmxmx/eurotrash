@@ -65,8 +65,8 @@ misc:
 - **winbond W25Q128FV** (SPI flash) (**)
 
 - jacks: 10 kobiconn / thonkiconn
-- rotary encoder w/switch: 2x (e.g. mouser # 652-PEC11R-4220F-S24 (e-o-l); i was using/prefer PEC11-4215K-S0024) 
-  (oh, looks as if these are out of stock; alternatives include: 652-PEC11R-4215F-S24 (15 mm shaft, flat); 652-PEC11R-4215K-S24   (15 mm shaft, knurled); 652-PEC11R-4220K-S24 (20 mm shaft, knurled))
+- rotary encoder w/switch: 2x (for instance: 652-PEC11R-4215F-S24 (15 mm shaft, flat); 652-PEC11R-4215K-S24 (15 mm shaft,   	
+  knurled); 652-PEC11R-4220F-S24 (20 mm, flat), 652-PEC11R-4220K-S24 (20 mm, knurled), etc)
 - 128x32 SPI oled: adafruit ( https://www.adafruit.com/products/661#Technical_Details ) 
 - **8 pin header for oled** + 8 pin socket (low profile), RM2.54 (***)
 

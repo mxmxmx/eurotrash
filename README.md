@@ -1,15 +1,13 @@
 eurotrash
 =========
 
-16bit/44.1kHz eurorack stereo/dual mono wav player 
+16bit/44.1kHz eurorack stereo/dual mono wav player:
+
+teensy 3.1 + pcm5102a DAC; atmega328 + 128x32 oled
 
 compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.html
 
-10HP
-
-depth ~ 28mm
-
-teensy 3.1 / pcm5102a ; atmega328 + 128x32 oled
+10HP, depth ~ 25mm
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 

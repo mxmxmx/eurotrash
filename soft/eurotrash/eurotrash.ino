@@ -202,18 +202,30 @@ void setup() {
   attachInterrupt(ENC_R1, right_encoder_ISR, CHANGE);
   attachInterrupt(ENC_R2, right_encoder_ISR, CHANGE);
   
+  delay(500);
+  
+  if (!digitalRead(BUTTON_L)) { 
+  /*  calibrate mid point */
+      update_display(LEFT,  2048);
+      update_display(RIGHT, 2048);
+      delay(200);
+      for (int i = 0; i < 1000; i++) {
+   
+           HALFSCALE +=  analogRead(CV1);
+           HALFSCALE +=  analogRead(CV2);
+           HALFSCALE +=  analogRead(CV3);
+           HALFSCALE +=  analogRead(CV4);
+           delay(2);
+      }
+      
+      HALFSCALE = HALFSCALE / 4000;
+      update_display(LEFT,  HALFSCALE);
+      update_display(RIGHT, HALFSCALE);
+      delay(1000);
+  }
+  
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
-
-  for (int i = 0; i < 10; i++) {
-   
-       uint16_t x = analogRead(CV3);
-       HALFSCALE += x;     
-       delay(10);
-  } 
-  
-  HALFSCALE = HALFSCALE / 10;
-
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */
@@ -221,11 +233,13 @@ void setup() {
 void loop() {
   
    
-  /*if (millis() - last_LCLK > 1000) {
+  /*
+  if (millis() - last_LCLK > 1000) {
      
        LCLK = true;
        
-   }*/
+   }
+  */
    
    
    leftright();
@@ -299,24 +313,3 @@ void loop() {
 /* ------------------------------------------------------------ */
 
 
-void leftright() {
-  
- if (LCLK) {  // clock?
-  
-       play_x(LEFT);
-       LCLK = false;
-       FADE_LEFT = false;
-       last_LCLK = millis();
- 
-   } 
-   if (RCLK) { // clock?
- 
-       play_x(RIGHT);
-       RCLK = false;
-       FADE_RIGHT = false;
-       last_RCLK = millis();
- 
-   } 
-}
-
-/* ------------------------------------------------------------ */

@@ -21,6 +21,28 @@ void init_channels(uint8_t f) {
   } 
 }  
 
+/* ====================check clocks================ */
+
+void leftright() {
+  
+ if (LCLK) {  // clock?
+  
+       play_x(LEFT);
+       LCLK = false;
+       FADE_LEFT = false;
+       last_LCLK = millis();
+ 
+   } 
+  if (RCLK) { // clock?
+ 
+       play_x(RIGHT);
+       RCLK = false;
+       FADE_RIGHT = false;
+       last_RCLK = millis();
+ 
+   } 
+}
+
 /* =============================================== */
 
 void play_x(uint8_t _channel) {

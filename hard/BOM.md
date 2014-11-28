@@ -6,7 +6,8 @@
 
 - 100R :         4x 
 - 220R :         2x 
-- 510R :         12x [these values are not critical, you could just get a bunch 220R and use them wherever it says 500R]
+- 470R : 	 2x  [510R will do, too]
+- 510R :         10x [these values are not critical, you could just get a bunch 220R and use them wherever it says 500R]
 - 1k :           4x
 - 10k :          4x
 - 20k :          2x

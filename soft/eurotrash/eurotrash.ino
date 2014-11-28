@@ -223,6 +223,8 @@ void setup() {
       update_display(RIGHT, HALFSCALE);
       delay(1000);
   }
+  // TD: else if eeprom.Read() etc
+  else HALFSCALE = ADC_CTRL_RES/2;
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);

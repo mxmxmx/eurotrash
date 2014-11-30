@@ -138,3 +138,42 @@ void generate_file_list() {  // to do - sort alphabetically?
 }
   
 /* =============================================== */
+
+void update_eof(uint8_t _channel) {
+  
+        /* update EOF */
+   if (_channel < CHANNELS) { 
+       int16_t _CV, tmp, tmp2; 
+       _CV = (HALFSCALE - CV[_channel])>>5;                    // CV
+       tmp  = audioChannels[_channel]->pos1 + _CV;             // length
+       tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
+       if (tmp > tmp2) tmp = tmp2;
+       else if (tmp <= 1) tmp = 1;
+       audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
+     
+    }
+}  
+
+
+void calibrate() {
+  
+  /*  calibrate mid point */
+      float average;
+      HALFSCALE = 0;
+      MENU_PAGE[0] = MODE;
+      update_display(LEFT,  HALFSCALE);
+      delay(500);
+      for (int i = 0; i < 200; i++) {
+   
+           average +=  analogRead(CV1);
+           average +=  analogRead(CV2);
+           average +=  analogRead(CV3);
+           average +=  analogRead(CV4);
+           delay(2);
+      }
+      
+      HALFSCALE = average / 800.0f;
+      update_display(LEFT, HALFSCALE);
+      delay(3000);
+      MENU_PAGE[0] = FILESELECT; 
+} 

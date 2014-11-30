@@ -9,7 +9,7 @@
 *   micro SD card should be class 10.
 *
 *   to do:
-*   - EOF CV
+*   - calibrate ADC / save to EEPROM
 *   - move to SD raw/mono 
 *   - open files by index
 *   - move to ADC/DMA
@@ -70,7 +70,6 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 /* CV inputs */
 #define numADC 4
 #define ADC_RES 12
-#define ADC_CTRL_RES pow(2,ADC_RES) - 1
 
 int16_t CV[numADC];
 uint8_t ADC_cycle;
@@ -95,12 +94,12 @@ void BUTTON_ISR_R() { BUTTON = 0x02; }
 
 IntervalTimer UI_timer, ADC_timer;
 volatile uint8_t UI  = false;
-volatile uint8_t ADC = false;
+volatile uint8_t _ADC = false;
 
 #define UI_RATE  15000  // UI update rate
-#define ADC_RATE 15000  // ADC sampling rate (*4)
+#define ADC_RATE 10000  // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
-void ADCtimerCallback() { ADC = true; }
+void ADCtimerCallback() { _ADC = true; }
 
 
 /* ----------------------- output channels --------------- */
@@ -202,29 +201,11 @@ void setup() {
   attachInterrupt(ENC_R1, right_encoder_ISR, CHANGE);
   attachInterrupt(ENC_R2, right_encoder_ISR, CHANGE);
   
-  delay(500);
-  
-  if (!digitalRead(BUTTON_L)) { 
-  /*  calibrate mid point */
-      update_display(LEFT,  2048);
-      update_display(RIGHT, 2048);
-      delay(200);
-      for (int i = 0; i < 1000; i++) {
-   
-           HALFSCALE +=  analogRead(CV1);
-           HALFSCALE +=  analogRead(CV2);
-           HALFSCALE +=  analogRead(CV3);
-           HALFSCALE +=  analogRead(CV4);
-           delay(2);
-      }
-      
-      HALFSCALE = HALFSCALE / 4000;
-      update_display(LEFT,  HALFSCALE);
-      update_display(RIGHT, HALFSCALE);
-      delay(1000);
-  }
+  delay(10);
+   /*  calibrate mid point */
+  if (!digitalRead(BUTTON_L)) calibrate(); 
   // TD: else if eeprom.Read() etc
-  else HALFSCALE = ADC_CTRL_RES/2;
+  else HALFSCALE = pow(2,ADC_RES-1)-1;
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
@@ -233,17 +214,7 @@ void setup() {
 /* main loop, wherein we mainly wait for the clock-flags */
 
 void loop() {
-  
-   
-  /*
-  if (millis() - last_LCLK > 1000) {
-     
-       LCLK = true;
-       
-   }
-  */
-   
-   
+ 
    leftright();
 
    /* eof left? */
@@ -288,13 +259,14 @@ void loop() {
    
    leftright();
    
-   if (ADC) {
+   if (_ADC) {
    
-       ADC = false;
+       _ADC = false;
        ADC_cycle++;
        if (ADC_cycle >= numADC)  ADC_cycle = 0; 
        CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
-       
+       update_eof(ADC_cycle);
+        
        /*if (!ADC_cycle) Serial.println(" ||| ");
        else Serial.print(" || ");
        Serial.print(CV[ADC_cycle]);

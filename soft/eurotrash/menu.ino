@@ -54,17 +54,22 @@ void update_enc() {
   if (encoder[_channel].change()) { 
         encoderdata = encoder[_channel].pos()>>SLOW;
         update_display(_channel, encoderdata);
-        
+  }
         /* update EOF */
+        /*
         if (MENU_PAGE[_channel] != FILESELECT) {
           
               uint32_t tmp, tmp2; 
+              int16_t _CV = (HALFSCALE - CV[_channel])>>5;  
+              Serial.print(_channel);
+              Serial.print("  |  ");
+              Serial.println(_CV);
               tmp  = audioChannels[_channel]->pos1;                   // length
               tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
               if (tmp > tmp2) tmp = tmp2;
               audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
-        }
-  }  
+        }    
+        */  
 }  
 
 /* --------------------------------------------------------------- */
@@ -185,7 +190,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
      }  
      
      case MODE: {
-          
+           msg = makedisplay(tmp);
            break;
         
      }

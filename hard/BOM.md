@@ -80,7 +80,7 @@ i've tried both _OPA1662 and AD8599_ in the audio path - not sure whether i'd no
 
 (***) you can solder the oled directly to the board (with the pin header) — which evidently isn't ideal; the better way is to
 put the *socket* onto the oled and use headers like these http://www.taydaelectronics.com/stackable-header-8-pins-2-54mm.html , 
-pushing them from up from the bottom of the board. see build doc.
+pushing them from up from the bottom of the board. for the socket, something like BKL Electronic 10120828 will be suitable. also see build doc.
 
 (****) using a 79L05 is ok, but using a LM4040-5 will result in somewhat better ADC performance/is recommended. (see build instructions). 
 

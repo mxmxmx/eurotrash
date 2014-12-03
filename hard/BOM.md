@@ -59,7 +59,7 @@ misc:
 - 16MHz crystal (HC/49us): 1x (mouser # 59-FOXS160-20-LF)
 - atmega328p : 1x (TQFP)  (mouser # 556-ATMEGA328P-AU)
 - teensy3.1  : 1x (**don't forget to cut the usb/power trace**) (http://store.oshpark.com/products/teensy-3-1)
-- 2x single row precision / "machine" pin header and sockets for teensy 3.1 (only the outer pins are used, so we need 14 pin, RM2.54)
+- 2x single row precision ("machined" / "round") pin header and sockets for teensy 3.1 (only the outer pins are used, so we need 14 pin, RM2.54)
 - 2x3 RM2.54 pin header (ISP)
 - 2x5 RM2.54 pin header (eurorack power connector)
 - molex micro SD card socket (# 502774-0891, mouser # 538-502774-0891)

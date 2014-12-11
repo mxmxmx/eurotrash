@@ -76,7 +76,7 @@ notes:
 the other is used for the digital outputs). 
 i've tried both _OPA1662 and AD8599_ in the audio path - not sure whether i'd notice the difference, YMMV.
      
-(**) the spi flash is optional, say, if you just wanted to store some drum samples — i got mine from alibaba. in that case, also get 3x 100R more (0805) (in the unlikely event you got these in multiples of 1).
+(**) the spi flash is entirely optional; i put it there as the pjrc audio adapter has one, too. it's currently not supported, neither by the eurotrash firmware nor by the audio libary, so at this point, i'd say, don't bother. there's also the question whether it'll be 100% compatible with future updates of the library (that said, it works in principle. i got mine from alibaba. if you'd like to, also get 3x 100R more (0805) (in the unlikely event you got these in multiples of 1)). 
 
 (***) you can solder the oled directly to the board (with the pin header) — which evidently isn't ideal; the better way is to
 put the *socket* onto the oled and use headers like these http://www.taydaelectronics.com/stackable-header-8-pins-2-54mm.html , 

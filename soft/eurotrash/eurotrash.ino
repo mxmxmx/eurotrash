@@ -2,7 +2,7 @@
 *   eurotrash
 *   dual wav player (test version).
 *
-*   files should be 16 bit stereo, 44.1kHz; file names 8.3 (SFN). 
+*   files should be 16 bit stereo or mono, 44.1kHz; file names 8.3 (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *

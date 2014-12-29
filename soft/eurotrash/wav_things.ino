@@ -63,7 +63,6 @@ void play_x(uint8_t _channel) {
  
 /* =============================================== */
 
-
 void next_wav(uint8_t _select, uint8_t _channel) {
   
        /* file */
@@ -154,15 +153,18 @@ void update_eof(uint8_t _channel) {
     }
 }  
 
+/* =============================================== */
 
 void calibrate() {
   
   /*  calibrate mid point */
       float average;
+      uint8_t save = false;
       HALFSCALE = 0;
-      MENU_PAGE[0] = MODE;
-      update_display(LEFT,  HALFSCALE);
-      delay(500);
+      MENU_PAGE[LEFT]  = MODE;
+      MENU_PAGE[RIGHT] = MODE;
+      update_display(LEFT,   HALFSCALE);
+      delay(1000);
       for (int i = 0; i < 200; i++) {
    
            average +=  analogRead(CV1);
@@ -173,7 +175,49 @@ void calibrate() {
       }
       
       HALFSCALE = average / 800.0f;
-      update_display(LEFT, HALFSCALE);
-      delay(3000);
-      MENU_PAGE[0] = FILESELECT; 
+      update_display(LEFT,  HALFSCALE);
+      delay(500);
+      update_display(RIGHT, HALFSCALE);
+      // do we want to save the value?
+      while(digitalRead(BUTTON_L)) {
+        
+           if (!digitalRead(BUTTON_R) && !save) { 
+                 save = true; 
+                 writeMIDpoint(HALFSCALE);
+                 update_display(RIGHT, 0x0);
+            }
+        
+      }
+      delay(1000);
+      MENU_PAGE[LEFT]  = FILESELECT; 
+      MENU_PAGE[RIGHT] = FILESELECT; 
+      LASTBUTTON = millis(); 
+      BUTTON = false;  
 } 
+
+
+/* some stuff to save the ADC calibration value */
+
+void writeMIDpoint(uint16_t _val) {
+   
+  uint8_t byte0, byte1, adr;
+       
+       byte0 = _val >> 8;
+       byte1 = _val;
+       EEPROM.write(adr, 0xFF);
+       adr++;
+       EEPROM.write(adr, byte0);
+       adr++;
+       EEPROM.write(adr, byte1);
+}  
+
+uint16_t readMIDpoint() {
+  
+       uint8_t byte0, byte1, adr = 0x1;
+       byte0 = EEPROM.read(adr);
+       adr++;
+       byte1 = EEPROM.read(adr);
+       
+       return  (uint16_t)(byte0 << 8) + byte1;
+}  
+

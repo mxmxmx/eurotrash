@@ -24,6 +24,8 @@ String leftdisplay  = "      0";
 String rightdisplay = "      0"; 
 uint8_t MENU_PAGE[2] = {0,0};
 uint8_t filedisplay[2];
+String _SAVE = "    save?";
+String _OK   = "       OK";
 
 /* menu pages */
 enum { 
@@ -190,7 +192,9 @@ void update_display(uint8_t _channel, uint16_t _newval) {
      }  
      
      case MODE: {
-           msg = makedisplay(tmp);
+           if (!_channel) msg = makedisplay(tmp); // left = display ADC
+           else if (_channel && _newval > 0) msg = _SAVE;
+           else msg = _OK;
            break;
         
      }

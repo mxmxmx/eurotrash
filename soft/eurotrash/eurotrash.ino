@@ -20,6 +20,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <EEPROM.h>
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
@@ -202,9 +203,9 @@ void setup() {
   attachInterrupt(ENC_R2, right_encoder_ISR, CHANGE);
   
   delay(10);
-   /*  calibrate mid point */
+   /*  calibrate mid point ? */
   if (!digitalRead(BUTTON_L)) calibrate(); 
-  // TD: else if eeprom.Read() etc
+  else if (EEPROM.read(0x0)==0xFF) HALFSCALE = readMIDpoint();
   else HALFSCALE = pow(2,ADC_RES-1)-1;
   
   update_display(LEFT,  INIT_FILE);

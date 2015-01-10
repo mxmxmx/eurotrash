@@ -76,8 +76,7 @@ bool AudioPlaySdWav::play(const char *filename)
 
 bool AudioPlaySdWav::seek(const char *filename, uint32_t pos)
 {
-        if (byte_offset < 0) byte_offset = 0;
-	byte_offset = (1+pos)<<9;
+    	byte_offset = (1+pos)<<9;
 	stop();
 	__disable_irq();
 	wavfile = SD.open(filename);

@@ -215,6 +215,8 @@ void setup() {
 /* main loop, wherein we mainly wait for the clock-flags */
 
 void loop() {
+  
+  while(1) {
  
    leftright();
 
@@ -283,6 +285,7 @@ void loop() {
    leftright();
    
    if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
+  }
 }
 
 /* ------------------------------------------------------------ */

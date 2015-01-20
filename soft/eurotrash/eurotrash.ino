@@ -2,17 +2,16 @@
 *   eurotrash
 *   dual wav player (test version).
 *
-*   files should be 16 bit stereo or mono, 44.1kHz; file names 8.3 (SFN). 
+*   files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
 *   micro SD card should be class 10.
 *
 *   to do:
-*   - calibrate ADC / save to EEPROM
-*   - move to SD raw/mono 
-*   - open files by index
-*   - move to ADC/DMA
+*   - SD raw/mono option 
+*   - integrate SPI flash [long press ?]
+*   - move to ADC/DMA [not really needed ?]
 */
 
 
@@ -61,12 +60,22 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 #define CV3 18
 #define CV4 19
 
-#define BUTTON_R 15
 #define BUTTON_L 5 
 #define ENC_L1 4
 #define ENC_L2 3
 #define ENC_R1 8 
 #define ENC_R2 6 
+
+#define CS_SD 10   
+
+//#define REV1
+#ifdef REV1
+#define CS_MEM 15   // rev1
+#define BUTTON_R 13 // rev1
+#else
+#define CS_MEM 13   // rev0
+#define BUTTON_R 15 // rev0
+#endif
 
 /* CV inputs */
 #define numADC 4
@@ -145,19 +154,20 @@ void setup() {
   pinMode(CLK_R, INPUT_PULLUP);
   pinMode(BUTTON_L, INPUT_PULLUP); 
   pinMode(BUTTON_R, INPUT_PULLUP); 
-  
+  /* clk outputs */
   pinMode(EOF_L, OUTPUT);
-  pinMode(EOF_R, OUTPUT);
-  
+  pinMode(EOF_R, OUTPUT);  
   digitalWrite(EOF_L, LOW);
   digitalWrite(EOF_R, LOW);
-  
+  /* prevent conflicts with spi flash */
+  pinMode(CS_MEM, OUTPUT);
+  digitalWrite(CS_MEM, HIGH);
   /* audio API */
   AudioMemory(15);
 
   SPI.setMOSI(7);
   SPI.setSCK(14);
-  if (!(SD.begin(10))) {
+  if (!(SD.begin(CS_SD))) {
     
     while (1) {
       Serial.println("Unable to access the SD card");
@@ -214,55 +224,55 @@ void setup() {
 
 /* main loop, wherein we mainly wait for the clock-flags */
 
-void loop() {
+void loop() 
+{
   
   while(1) {
  
-   leftright();
+     leftright();
 
-   /* eof left? */
+     /* eof left? */
    
-   if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
+     if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
         
         digitalWriteFast(EOF_L, HIGH);  
         fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
         fade2.fadeOut(FADE_OUT);      
         last_EOF_L = millis();
         EOF_L_OFF = FADE_LEFT = true;
-     
-   } 
+     } 
        
-   leftright();
+     leftright();
    
-   /* eof right? */
+     /* eof right? */
    
-   if (!FADE_RIGHT && ((millis() - last_RCLK > audioChannels[RIGHT]->eof))) {
+     if (!FADE_RIGHT && ((millis() - last_RCLK > audioChannels[RIGHT]->eof))) {
         
         digitalWriteFast(EOF_R, HIGH);
         fade3.fadeOut(FADE_OUT);
         fade4.fadeOut(FADE_OUT);
         last_EOF_R = millis();
         EOF_R_OFF = FADE_RIGHT = true;
-   }
+     }
    
-   leftright();
+     leftright();
    
-   if (UI) {
+     if (UI) {
        update_enc();
        UI = false;
-   }
+     }
    
-   leftright();
+     leftright();
    
-   if (BUTTON && (millis() - LASTBUTTON > DEBOUNCE)) {
+     if (BUTTON && (millis() - LASTBUTTON > DEBOUNCE)) {
        buttons(BUTTON-0x01);
        BUTTON = false;  
        LASTBUTTON = millis();  
-   } 
+     } 
    
-   leftright();
+     leftright();
    
-   if (_ADC) {
+     if (_ADC) {
    
        _ADC = false;
        ADC_cycle++;
@@ -276,15 +286,15 @@ void loop() {
        Serial.print(" -> ");
        Serial.print(ADC_cycle);
        */
-   }  
+     }  
    
-   leftright();
+     leftright();
     
-   if (EOF_L_OFF && (millis() - last_EOF_L > TRIG_LENGTH))  { digitalWriteFast(EOF_L, LOW); EOF_L_OFF = false; }
+     if (EOF_L_OFF && (millis() - last_EOF_L > TRIG_LENGTH))  { digitalWriteFast(EOF_L, LOW); EOF_L_OFF = false; }
    
-   leftright();
+     leftright();
    
-   if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
+     if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
   }
 }
 

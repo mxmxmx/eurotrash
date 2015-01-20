@@ -158,7 +158,7 @@ void update_eof(uint8_t _channel) {
 void calibrate() {
   
   /*  calibrate mid point */
-      float average;
+      float average = 0.0f;
       uint8_t save = false;
       HALFSCALE = 0;
       MENU_PAGE[LEFT]  = MODE;
@@ -200,7 +200,7 @@ void calibrate() {
 
 void writeMIDpoint(uint16_t _val) {
    
-  uint8_t byte0, byte1, adr;
+  uint8_t byte0, byte1, adr = 0;
        
        byte0 = _val >> 8;
        byte1 = _val;

@@ -76,7 +76,7 @@ bool AudioPlaySdWav::play(const char *filename)
 
 bool AudioPlaySdWav::seek(const char *filename, uint32_t pos)
 {
-    	byte_offset = (1+pos)<<9;
+	byte_offset = (1+pos)<<9;
 	stop();
 	__disable_irq();
 	wavfile = SD.open(filename);
@@ -151,14 +151,19 @@ void AudioPlaySdWav::update(void)
 	// we only get to this point when buffer[512] is empty
 	if (state != STATE_STOP && wavfile.available()) {
 		// we can read more data from the file...
+		readagain:
 		buffer_length = wavfile.read(buffer, 512);
 		if (buffer_length == 0) goto end;
 		buffer_offset = 0;
+		bool parsing = (state >= 8);
 		bool txok = consume(buffer_length);
 		if (txok) {
 			if (state != STATE_STOP) return;
 		} else {
-			if (state != STATE_STOP) goto cleanup;
+			if (state != STATE_STOP) {
+			     if (parsing && state < 8) goto readagain;	
+			     else goto cleanup;
+			}
 		}
 	}
 end:	// end of file reached or other reason to stop
@@ -169,8 +174,8 @@ end:	// end of file reached or other reason to stop
 cleanup:
 	if (block_left) {
 		if (block_offset > 0) {
-			while (block_offset < AUDIO_BLOCK_SAMPLES) {
-				block_left->data[block_offset++] = 0;
+			for (uint32_t i=block_offset; i < AUDIO_BLOCK_SAMPLES; i++) {
+				block_left->data[i] = 0;
 			}
 			transmit(block_left, 0);
 			if (state < 8 && (state & 1) == 0) {
@@ -182,8 +187,8 @@ cleanup:
 	}
 	if (block_right) {
 		if (block_offset > 0) {
-			while (block_offset < AUDIO_BLOCK_SAMPLES) {
-				block_right->data[block_offset++] = 0;
+			for (uint32_t i=block_offset; i < AUDIO_BLOCK_SAMPLES; i++) {
+				block_right->data[i] = 0;
 			}
 			transmit(block_right, 1);
 		}

@@ -31,8 +31,7 @@ void leftright() {
        LCLK = false;
        FADE_LEFT = false;
        last_LCLK = millis();
- 
-   } 
+  } 
   if (RCLK) { // clock?
  
        play_x(RIGHT);
@@ -68,8 +67,8 @@ void next_wav(uint8_t _select, uint8_t _channel) {
        /* file */
        uint16_t _file = audioChannels[_channel]->file_wav; 
        /* where to start from? */
-       int16_t _CV = (HALFSCALE - CV[3-_channel])>>5;  
-       int16_t  _startPos =  _CV + audioChannels[_channel]->pos0; 
+       int16_t _startPos = (HALFSCALE - CV[3-_channel])>>5;  // CV
+        _startPos += audioChannels[_channel]->pos0;          // add manual offset
        /* limit */
        if (_startPos < 0) _startPos = 0;
        else if (_startPos >= CTRL_RESOLUTION) _startPos = CTRL_RESOLUTION-1;

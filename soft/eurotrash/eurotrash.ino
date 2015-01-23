@@ -68,13 +68,14 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 
 #define CS_SD 10   
 
-//#define REV1
+#define REV1
+
 #ifdef REV1
-#define CS_MEM 15   // rev1
-#define BUTTON_R 13 // rev1
+  #define CS_MEM 15   // rev1
+  #define BUTTON_R 13 // rev1
 #else
-#define CS_MEM 13   // rev0
-#define BUTTON_R 15 // rev0
+  #define CS_MEM 13   // rev0
+  #define BUTTON_R 15 // rev0
 #endif
 
 /* CV inputs */
@@ -107,7 +108,7 @@ volatile uint8_t UI  = false;
 volatile uint8_t _ADC = false;
 
 #define UI_RATE  15000  // UI update rate
-#define ADC_RATE 10000  // ADC sampling rate (*4)
+#define ADC_RATE 1000   // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { _ADC = true; }
 
@@ -135,8 +136,8 @@ typedef struct audioChannel {
 
 struct audioChannel *audioChannels[CHANNELS];
 
-const uint8_t  FADE_IN  = 20;   // fade in  (adjust to your liking)
-const uint16_t FADE_OUT = 200;  // fade out (ditto)
+const uint8_t  FADE_IN  = 8;   // fade in  (adjust to your liking)
+const uint16_t FADE_OUT = 100;  // fade out (ditto)
 uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
 const uint8_t TRIG_LENGTH = 25; // trig length / clock out
@@ -146,7 +147,7 @@ const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 
 void setup() {
  
-  //analogReference(EXTERNAL);
+  analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
   analogReadAveraging(16);   
   /* clk inputs and switches need the pullups */

@@ -108,7 +108,7 @@ volatile uint8_t UI  = false;
 volatile uint8_t _ADC = false;
 
 #define UI_RATE  15000  // UI update rate
-#define ADC_RATE 1000   // ADC sampling rate (*4)
+#define ADC_RATE 250   // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { _ADC = true; }
 

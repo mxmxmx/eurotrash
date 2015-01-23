@@ -68,7 +68,7 @@ AudioConnection          link_9(mixR, 0, dac, 1);
 
 #define CS_SD 10   
 
-#define REV1
+//#define REV1
 
 #ifdef REV1
   #define CS_MEM 15   // rev1

@@ -26,8 +26,8 @@
 #define PAGE      256
 #define DIRECTORY "SERFLASH"
 #define MAX_FILES 256 
-#define MAX_LEN 0x8 // file names
-#define INFO_PAGES_SLOT MAX_LEN + 0x4 // address size + file name
+#define MAX_LEN 0x8 // file name size
+#define INFO_SLOT_SIZE MAX_LEN + 0x4 // address size + file name
 #define PAGE_OFFSET 0x2 // file # in bytes 0,1
 
 uint8_t INFO_PAGES; 
@@ -49,7 +49,6 @@ char recovered_names[MAX_FILES][MAX_LEN];
 uint8_t _EXT = 0;
 
 
-
 bool verify(void)
 {
   
@@ -63,7 +62,7 @@ bool verify(void)
     // file number?
     flash_read_pages(buf2, tmp_page, 1);
     uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1]; // extract file #
-    uint8_t  page_offset = 1 + ((files_nr*INFO_PAGES_SLOT + PAGE_OFFSET) >> 0x8); // page offset
+    uint8_t  page_offset = 1 + ((files_nr*INFO_SLOT_SIZE + PAGE_OFFSET) >> 0x8); // page offset
    
     if (fcnt_all != files_nr)  { 
               Serial.println("Files on flash ? --> file #: no match"); 
@@ -73,8 +72,7 @@ bool verify(void)
     else Serial.printf("Files on flash ? --> # %d file(s): ok \r\n", files_nr); 
     
     page += page_offset;  
-    //Serial.println(page_offset);
-    
+   
     dir = SD.open(DIRECTORY); 
     while(1) {
       entry = dir.openNextFile();
@@ -125,7 +123,6 @@ void flash(void)
           flash_page_program(buf,page);
           page++;
       } while (rd==PAGE);          
-    //Serial.printf("done.\r\n");
     entry.close(); 
     fcnt++;
     }
@@ -194,7 +191,7 @@ bool extract(void)
     // file number?
     flash_read_pages(buf2, tmp_page, 1);
     uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];           // extract file #
-    uint8_t  page_offset = 1 + ((files_nr*INFO_PAGES_SLOT + 0x2) >> 0x8); // page offset
+    uint8_t  page_offset = 1 + ((files_nr*INFO_SLOT_SIZE + 0x2) >> 0x8); // page offset
     //Serial.println(page_offset);
     if (!files_nr)  { 
               
@@ -294,7 +291,7 @@ void setup()
   fcnt_all = fcnt;
   
   Serial.printf("\t\t\t%d file(s): %d bytes \r\n", fcnt, fsize);
-  INFO_PAGES = 1 + ((fcnt*INFO_PAGES_SLOT + 0x2) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
+  INFO_PAGES = 1 + ((fcnt*INFO_SLOT_SIZE + 0x2) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
   Serial.printf("\t\t\tPages consumed for file info: %d page(s)\r\n", INFO_PAGES);
   fsize += INFO_PAGES*PAGE;
   Serial.printf("\t\t\t--> total: %d bytes \r\n", fsize);

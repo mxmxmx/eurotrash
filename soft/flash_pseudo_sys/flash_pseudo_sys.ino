@@ -309,7 +309,6 @@ void setup()
       flash();      
       verify();     
       extract(); 
-      extract(); 
       
   
 end:            

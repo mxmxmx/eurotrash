@@ -12,7 +12,7 @@
   
    Version 20141227
    
-   + file info / extraction
+   + file info / extraction (mxmxmx)
       
 */
 
@@ -44,7 +44,6 @@ unsigned char buf[PAGE];
 String filename[MAX_FILES];
 unsigned int file_position[MAX_FILES];
 uint32_t file_adr[MAX_FILES];
-char* nice_names[MAX_FILES];
 char recovered_names[MAX_FILES][MAX_LEN];
 uint8_t _EXT = 0;
 
@@ -57,12 +56,11 @@ bool verify(void)
     fcnt = 0;
     pos = 0; 
     page = 0;   
-    uint8_t tmp_page = 0;  
     Serial.println("Verify.");
     // file number?
-    flash_read_pages(buf2, tmp_page, 1);
+    flash_read_pages(buf2, page, 1);
     uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1]; // extract file #
-    uint8_t  page_offset = 1 + ((files_nr*INFO_SLOT_SIZE + PAGE_OFFSET) >> 0x8); // page offset
+    uint8_t  page_offset = 0x1 + ((files_nr*INFO_SLOT_SIZE + PAGE_OFFSET) >> 0x8); // page offset
    
     if (fcnt_all != files_nr)  { 
               Serial.println("Files on flash ? --> file #: no match"); 
@@ -109,7 +107,7 @@ void flash(void)
    page = INFO_PAGES; // file info offset 
     
    dir = SD.open(DIRECTORY);
-   while(1) {
+   while(fcnt < fcnt_all) {
       entry = dir.openNextFile();
       if (!entry) break;
       pos = page * PAGE;
@@ -130,12 +128,11 @@ void flash(void)
     // store INFO_PAGES:
     page = 0;
     uint16_t slot = 0;
-    uint16_t INFO_PAGES_bytes = INFO_PAGES * PAGE;
-    uint8_t pseudo_file_sys[INFO_PAGES_bytes]; 
-    Serial.println("  ");
+    uint8_t pseudo_file_sys[INFO_PAGES*PAGE]; 
+    Serial.println("");
     Serial.printf("Generating file info (%d page(s)):", INFO_PAGES);
   
-    memset(pseudo_file_sys, 0xff, INFO_PAGES_bytes); 
+    memset(pseudo_file_sys, 0xff, INFO_PAGES*PAGE); 
     // file #  
     pseudo_file_sys[slot] = fcnt_all>>8;
     slot++;
@@ -147,7 +144,6 @@ void flash(void)
     for (int i = 0; i < fcnt; i++) {
        
         uint32_t f_pos = file_position[i];
-        String name = filename[i];
         // split address:
         pseudo_file_sys[slot] = f_pos>>24;
         slot++;
@@ -190,9 +186,9 @@ bool extract(void)
     Serial.println("Extracting file info:");
     // file number?
     flash_read_pages(buf2, tmp_page, 1);
-    uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];           // extract file #
-    uint8_t  page_offset = 1 + ((files_nr*INFO_SLOT_SIZE + 0x2) >> 0x8); // page offset
-    //Serial.println(page_offset);
+    uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];          // extract file #
+    uint8_t  page_offset = 0x1 + ((files_nr*INFO_SLOT_SIZE + 0x2) >> 0x8); // page offset
+   
     if (!files_nr)  { 
               
               Serial.println("-->  no files found"); 
@@ -203,7 +199,7 @@ bool extract(void)
     // ... ok, in that case, read file info:
     unsigned char tmp_buf[PAGE*page_offset];
     flash_read_pages(tmp_buf, tmp_page, page_offset);
-    get_INFO_PAGES(tmp_buf, files_nr); // we continue at byte 3
+    get_INFO_PAGES(tmp_buf, files_nr); 
   
     Serial.println("done.");
     return true;
@@ -231,11 +227,9 @@ void get_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
          adr += tmp;
          file_adr[_files-_f] = adr;   // file pos
          uint8_t len = MAX_LEN; // names
-         int i = 0;
          while (len) {
-               recovered_names[_files-_f][i] = *fileinfo; 
+               recovered_names[_files-_f][MAX_LEN-len] = *fileinfo; 
                fileinfo++;   
-               i++;
                len--;    
          };  // get name
          Serial.print(recovered_names[_files-_f]);
@@ -249,8 +243,7 @@ void get_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
 char makenice(char _n, uint8_t _ext) {
    
    if (_ext) return ' ';
-   char tmp = _n;
-   
+   char tmp = _n;   
    if (tmp == '.') _EXT = 1; 
    if (tmp >= 'A' && tmp  <= 'Z' ) tmp = tmp + 'a' - 'A';
    else tmp = ' ';
@@ -264,7 +257,7 @@ void setup()
   SPI.setSCK(14);
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
-   while (!Serial) {;}  
+  while (!Serial) {;}  
   delay(1000); 
   Serial.print("\r\n\r\nW25Q128FV Serial Flasher \r\nInitializing SD card...");
   if (!SD.begin(10)) {
@@ -308,12 +301,14 @@ void setup()
       Serial.printf(" is ok.\r\nFile(s) fit(s) in serial flash, %d Bytes remaining.\r\n\r\n", FLASHSIZE - fsize);
 
       Serial.print("Check flash content: \r\n");
+      extract(); 
       if (verify()) { Serial.println("Flash content ok. Nothing to do."); goto end; }
 
       erase();
       flash();      
       verify();     
       extract(); 
+      
   
 end:            
       dir.close();

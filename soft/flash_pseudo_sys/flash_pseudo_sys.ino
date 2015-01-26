@@ -227,12 +227,14 @@ void get_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
          adr += tmp;
          file_adr[_files-_f] = adr;   // file pos
          uint8_t len = MAX_LEN; // names
+         char _x;
          while (len) {
-               recovered_names[_files-_f][MAX_LEN-len] = *fileinfo; 
-               fileinfo++;   
-               len--;    
+               _x = recovered_names[_files-_f][MAX_LEN-len] = *fileinfo;  
+               Serial.print(_x); 
+               len--;   
+               fileinfo++;  
          };  // get name
-         Serial.print(recovered_names[_files-_f]);
+         
          Serial.printf(" -- > file_adr[%d] = 0x%07X ......\r\n", _files - _f, adr);
         _f--;
      }
@@ -301,12 +303,12 @@ void setup()
       Serial.printf(" is ok.\r\nFile(s) fit(s) in serial flash, %d Bytes remaining.\r\n\r\n", FLASHSIZE - fsize);
 
       Serial.print("Check flash content: \r\n");
-      extract(); 
+      extract();    
       if (verify()) { Serial.println("Flash content ok. Nothing to do."); goto end; }
-
       erase();
       flash();      
       verify();     
+      extract(); 
       extract(); 
       
   

@@ -26,11 +26,12 @@
 #define PAGE      256
 #define DIRECTORY "SERFLASH"
 #define MAX_FILES 256 
-#define MAX_LEN 0x8 // file name size
-#define INFO_SLOT_SIZE MAX_LEN + 0x4 // address size + file name
-#define PAGE_OFFSET 0x2 // file # in bytes 0,1
+#define MAX_LEN 0x8                    // file name size
+#define INFO_SLOT_SIZE (MAX_LEN + 0x4) // address size + file name
+#define _OFFSET 0x2                    // file # in bytes 0,1
+#define INFO_ADR 0x0                   // info adr.
 
-uint8_t INFO_PAGES; 
+uint16_t NUM_INFO_PAGES; 
 
 File dir;
 File entry;
@@ -58,18 +59,18 @@ bool verify(void)
     page = 0;   
     Serial.println("Verify.");
     // file number?
-    flash_read_pages(buf2, page, 1);
-    uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1]; // extract file #
-    uint8_t  page_offset = 0x1 + ((files_nr*INFO_SLOT_SIZE + PAGE_OFFSET) >> 0x8); // page offset
+    flash_read_pages(buf2, INFO_ADR, 1);
+    uint16_t num_files = ((uint16_t)(buf2[0]) << 0x8) + buf2[1]; // extract file #
+    uint16_t num_pages = 0x1 + ((num_files*INFO_SLOT_SIZE + _OFFSET) >> 0x8); // page offset
    
-    if (fcnt_all != files_nr)  { 
+    if (fcnt_all != num_files)  { 
               Serial.println("Files on flash ? --> file #: no match"); 
               Serial.println(""); 
               return false; 
     }
-    else Serial.printf("Files on flash ? --> # %d file(s): ok \r\n", files_nr); 
+    else Serial.printf("Files on flash ? --> # %d file(s): ok \r\n", num_files); 
     
-    page += page_offset;  
+    page += num_pages;   // audio data starts here
    
     dir = SD.open(DIRECTORY); 
     while(1) {
@@ -104,7 +105,7 @@ void flash(void)
     
    fcnt = 0;
    pos =  0;
-   page = INFO_PAGES; // file info offset 
+   page = NUM_INFO_PAGES; // file info offset 
     
    dir = SD.open(DIRECTORY);
    while(fcnt < fcnt_all) {
@@ -126,21 +127,19 @@ void flash(void)
     }
     
     // store INFO_PAGES:
-    page = 0;
     uint16_t slot = 0;
-    uint8_t pseudo_file_sys[INFO_PAGES*PAGE]; 
+    uint8_t pseudo_file_sys[NUM_INFO_PAGES*PAGE]; 
     Serial.println("");
-    Serial.printf("Generating file info (%d page(s)):", INFO_PAGES);
-  
-    memset(pseudo_file_sys, 0xff, INFO_PAGES*PAGE); 
-    // file #  
-    pseudo_file_sys[slot] = fcnt_all>>8;
+    Serial.printf("Generating file info (%d page(s)):", NUM_INFO_PAGES);
+    memset(pseudo_file_sys, 0xff, NUM_INFO_PAGES*PAGE); 
+    // file # 
+    pseudo_file_sys[slot] = fcnt>>8;
     slot++;
-    pseudo_file_sys[slot] = fcnt_all;
+    pseudo_file_sys[slot] = fcnt;
     slot++;
     Serial.println("");
-    // adr + name
-    uint8_t len = MAX_LEN; // name len
+    // adress + file-names
+    uint8_t len = MAX_LEN; 
     for (int i = 0; i < fcnt; i++) {
        
         uint32_t f_pos = file_position[i];
@@ -163,13 +162,14 @@ void flash(void)
         }
     }    
     // now flash the info page(s):
-    uint8_t pages = INFO_PAGES; 
+    uint8_t pages = NUM_INFO_PAGES; 
+    page = INFO_ADR; // start from 0x0
     Serial.println("");   
-    while(INFO_PAGES) {
-        Serial.printf("-- > Flashing info page # \%d\ (of %d) at file_position: 0x%07X ...\r\n", page+1, pages, page*PAGE);
+    while(pages) {
+        Serial.printf("-- > Flashing info page # \%d\ (of %d) at file_position: 0x%07X ...\r\n", page+1, NUM_INFO_PAGES, page*PAGE);
         uint8_t *sys = pseudo_file_sys+page*PAGE;
         flash_page_program(sys, page);
-        INFO_PAGES--;
+        pages--;
         page++;
     }
     Serial.printf("done.\r\n");
@@ -178,28 +178,27 @@ void flash(void)
 
 bool extract(void)
 {
-  
+    uint16_t num_files;
+    uint16_t num_pages;
     unsigned char buf2[PAGE];
- 
-    uint8_t tmp_page = 0;  
+  
     Serial.println("");
     Serial.println("Extracting file info:");
     // file number?
-    flash_read_pages(buf2, tmp_page, 1);
-    uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];          // extract file #
-    uint8_t  page_offset = 0x1 + ((files_nr*INFO_SLOT_SIZE + 0x2) >> 0x8); // page offset
-   
-    if (!files_nr)  { 
-              
+    flash_read_pages(buf2, INFO_ADR, 1);
+    num_files = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];               // extract file #
+    
+    if (!num_files || num_files > MAX_FILES)  { 
               Serial.println("-->  no files found"); 
               return false; 
     }
-    else Serial.printf("-- > found %d file(s): ok \r\n", files_nr); 
+    else Serial.printf("-- > found %d file(s): ok \r\n", num_files); 
     
     // ... ok, in that case, read file info:
-    unsigned char tmp_buf[PAGE*page_offset];
-    flash_read_pages(tmp_buf, tmp_page, page_offset);
-    get_INFO_PAGES(tmp_buf, files_nr); 
+    num_pages = 0x1 + ((num_files*INFO_SLOT_SIZE + _OFFSET) >> 0x8);  // info-page size
+    unsigned char tmp_buf[PAGE*num_pages];
+    flash_read_pages(tmp_buf, INFO_ADR, num_pages);
+    parse_INFO_PAGES(tmp_buf, num_files); 
   
     Serial.println("done.");
     return true;
@@ -211,9 +210,9 @@ void erase(void) {
     Serial.println("done.");
 }
 
-void get_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
+void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
   
-     fileinfo += 0x2; // skip file #
+     fileinfo += 0x2; // skip file # bytes
      uint8_t _f = _files;
      while (_f) {
          uint32_t tmp, adr;
@@ -245,6 +244,7 @@ void get_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
 char makenice(char _n, uint8_t _ext) {
    
    if (_ext) return ' ';
+   
    char tmp = _n;   
    if (tmp == '.') _EXT = 1; 
    if (tmp >= 'A' && tmp  <= 'Z' ) tmp = tmp + 'a' - 'A';
@@ -286,16 +286,17 @@ void setup()
   fcnt_all = fcnt;
   
   Serial.printf("\t\t\t%d file(s): %d bytes \r\n", fcnt, fsize);
-  INFO_PAGES = 1 + ((fcnt*INFO_SLOT_SIZE + 0x2) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
-  Serial.printf("\t\t\tPages consumed for file info: %d page(s)\r\n", INFO_PAGES);
-  fsize += INFO_PAGES*PAGE;
+  NUM_INFO_PAGES = 1 + ((fcnt*INFO_SLOT_SIZE + _OFFSET) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
+  
+  Serial.printf("\t\t\tPages consumed for file info: %d page(s)\r\n", NUM_INFO_PAGES);
+  fsize += NUM_INFO_PAGES*PAGE;
   Serial.printf("\t\t\t--> total: %d bytes \r\n", fsize);
   Serial.println("");
   
   if (!fsize) goto ready;
   if (fsize < FLASHSIZE) {
-      //flash_init(15);
-      flash_init();
+      flash_init(15);
+      //flash_init();
       int flashstatus = flash_read_status();
       flash_read_id(id_tab);
       Serial.printf("Flash Status: 0x%X, ID:0x%X,0x%X,0x%X,0x%X ", flashstatus , id_tab[0], id_tab[1], id_tab[2], id_tab[3]);   
@@ -308,10 +309,8 @@ void setup()
       erase();
       flash();      
       verify();     
-      extract(); 
-      extract(); 
+      extract();
       
-  
 end:            
       dir.close();
   }

@@ -185,10 +185,19 @@ bool extract(void)
     Serial.println("");
     Serial.println("Extracting file info:");
     // file number?
+<<<<<<< HEAD
     flash_read_pages(buf2, INFO_ADR, 1);
     num_files = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];               // extract file #
     
     if (!num_files || num_files > MAX_FILES)  { 
+=======
+    flash_read_pages(buf2, tmp_page, 1);
+    uint16_t files_nr = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];          // extract file #
+    uint8_t  page_offset = 0x1 + ((files_nr*INFO_SLOT_SIZE + 0x2) >> 0x8); // page offset
+   
+    if (!files_nr || files_nr > MAX_FILES))  { 
+              
+>>>>>>> FETCH_HEAD
               Serial.println("-->  no files found"); 
               return false; 
     }
@@ -309,7 +318,11 @@ void setup()
       erase();
       flash();      
       verify();     
+<<<<<<< HEAD
       extract();
+=======
+      extract(); 
+>>>>>>> FETCH_HEAD
       
 end:            
       dir.close();

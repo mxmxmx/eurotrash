@@ -295,8 +295,8 @@ void setup()
   
   if (!fsize) goto ready;
   if (fsize < FLASHSIZE) {
-      flash_init(15);
-      //flash_init();
+      //flash_init(15);
+      flash_init();
       int flashstatus = flash_read_status();
       flash_read_id(id_tab);
       Serial.printf("Flash Status: 0x%X, ID:0x%X,0x%X,0x%X,0x%X ", flashstatus , id_tab[0], id_tab[1], id_tab[2], id_tab[3]);   

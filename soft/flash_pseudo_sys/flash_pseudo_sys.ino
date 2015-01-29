@@ -12,7 +12,16 @@
   
    Version 20141227
    
-   + file info / extraction (mxmxmx)
+   + file info / extraction (mxmxmx):
+   
+   file_count: stored in bytes 0, 1 / page 0x0;
+   file_info : stored in 12 byte packets: 4 byte [adress] + 8 byte [name], from byte 2 / page 0x0;
+   
+   ie:
+   
+   [b0]  [b1] [b02 - b05] [b06 - b9] [b10 - b17] [b18 - b21] [b22 - b29] [etc .. ]
+   
+   [# files ] [ data end ] [f 0 adr] [f 0 name ] [f 1 adr  ] [f 1 name ] [etc .. ]
       
 */
 
@@ -28,7 +37,7 @@
 #define MAX_FILES 256 
 #define MAX_LEN 0x8                    // file name size
 #define INFO_SLOT_SIZE (MAX_LEN + 0x4) // address size + file name
-#define _OFFSET 0x2                    // file # in bytes 0,1
+#define _OFFSET 0x6                    // file # in bytes 0,1; end pos bytes 2,3,4,5 
 #define INFO_ADR 0x0                   // info adr.
 
 uint16_t NUM_INFO_PAGES; 
@@ -44,9 +53,10 @@ unsigned char buf[PAGE];
 
 String filename[MAX_FILES];
 unsigned int file_position[MAX_FILES];
+uint8_t _EXT = 0;
+/* recovered adresses + files go here: */
 uint32_t file_adr[MAX_FILES];
 char recovered_names[MAX_FILES][MAX_LEN];
-uint8_t _EXT = 0;
 
 
 bool verify(void)
@@ -127,15 +137,26 @@ void flash(void)
     }
     
     // store INFO_PAGES:
+    uint32_t data_stop = page * PAGE;
     uint16_t slot = 0;
     uint8_t pseudo_file_sys[NUM_INFO_PAGES*PAGE]; 
     Serial.println("");
     Serial.printf("Generating file info (%d page(s)):", NUM_INFO_PAGES);
+    Serial.println("");
+    Serial.printf("data stop %d at position", data_stop);
     memset(pseudo_file_sys, 0xff, NUM_INFO_PAGES*PAGE); 
     // file # 
-    pseudo_file_sys[slot] = fcnt>>8;
+    pseudo_file_sys[slot] = fcnt>>8;       // 0
     slot++;
-    pseudo_file_sys[slot] = fcnt;
+    pseudo_file_sys[slot] = fcnt;          // 1
+    slot++;
+    pseudo_file_sys[slot] = data_stop>>24; // 2
+    slot++; 
+    pseudo_file_sys[slot] = data_stop>>16; // 3
+    slot++;
+    pseudo_file_sys[slot] = data_stop>>8;  // 4
+    slot++;
+    pseudo_file_sys[slot] = data_stop;     // 5
     slot++;
     Serial.println("");
     // adress + file-names
@@ -180,6 +201,7 @@ bool extract(void)
 {
     uint16_t num_files;
     uint16_t num_pages;
+    uint32_t data_stop;
     unsigned char buf2[PAGE];
   
     Serial.println("");
@@ -193,9 +215,11 @@ bool extract(void)
               return false; 
     }
     else Serial.printf("-- > found %d file(s): ok \r\n", num_files); 
-    
-    // ... ok, in that case, read file info:
+    //
+    data_stop = (buf2[2] << 24) + (buf2[3] << 16) + (buf2[4] << 8) + buf2[5];
+    // ... ok, now, read file info:
     num_pages = 0x1 + ((num_files*INFO_SLOT_SIZE + _OFFSET) >> 0x8);  // info-page size
+    Serial.printf("-- > audio data starts at 0x%07X, ends at position: 0x%07X ...\r\n", num_pages*PAGE, data_stop);
     unsigned char tmp_buf[PAGE*num_pages];
     flash_read_pages(tmp_buf, INFO_ADR, num_pages);
     parse_INFO_PAGES(tmp_buf, num_files); 
@@ -212,7 +236,7 @@ void erase(void) {
 
 void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
   
-     fileinfo += 0x2; // skip file # bytes
+     fileinfo += _OFFSET; // skip file info # bytes
      uint8_t _f = _files;
      while (_f) {
          uint32_t tmp, adr;
@@ -286,7 +310,7 @@ void setup()
   fcnt_all = fcnt;
   
   Serial.printf("\t\t\t%d file(s): %d bytes \r\n", fcnt, fsize);
-  NUM_INFO_PAGES = 1 + ((fcnt*INFO_SLOT_SIZE + _OFFSET) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
+  NUM_INFO_PAGES = 0x1 + ((fcnt*INFO_SLOT_SIZE + _OFFSET) >> 0x8); // == # pages; 12 bytes: pos + name + fcnt;
   
   Serial.printf("\t\t\tPages consumed for file info: %d page(s)\r\n", NUM_INFO_PAGES);
   fsize += NUM_INFO_PAGES*PAGE;

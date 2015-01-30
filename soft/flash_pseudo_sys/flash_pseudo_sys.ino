@@ -15,6 +15,7 @@
    + file info / extraction (mxmxmx):
    
    file_count: stored in bytes 0, 1 / page 0x0;
+   end of data: stored in bytes 2,3,4,5 / page 0x0;
    file_info : stored in 12 byte packets: 4 byte [adress] + 8 byte [name], from byte 2 / page 0x0;
    
    ie:
@@ -54,9 +55,12 @@ unsigned char buf[PAGE];
 String filename[MAX_FILES];
 unsigned int file_position[MAX_FILES];
 uint8_t _EXT = 0;
+
 /* recovered adresses + files go here: */
-uint32_t file_adr[MAX_FILES];
-char recovered_names[MAX_FILES][MAX_LEN];
+
+uint32_t file_adr[MAX_FILES+0x1]; // + end of data
+uint32_t file_len[MAX_FILES];     // length
+String   file_name[MAX_FILES];    // names 
 
 
 bool verify(void)
@@ -137,26 +141,26 @@ void flash(void)
     }
     
     // store INFO_PAGES:
-    uint32_t data_stop = page * PAGE;
+    uint32_t end_of_data = page * PAGE;
     uint16_t slot = 0;
     uint8_t pseudo_file_sys[NUM_INFO_PAGES*PAGE]; 
     Serial.println("");
     Serial.printf("Generating file info (%d page(s)):", NUM_INFO_PAGES);
     Serial.println("");
-    Serial.printf("data stop %d at position", data_stop);
+    Serial.printf("data stop %d at position", end_of_data);
     memset(pseudo_file_sys, 0xff, NUM_INFO_PAGES*PAGE); 
     // file # 
     pseudo_file_sys[slot] = fcnt>>8;       // 0
     slot++;
     pseudo_file_sys[slot] = fcnt;          // 1
     slot++;
-    pseudo_file_sys[slot] = data_stop>>24; // 2
+    pseudo_file_sys[slot] = end_of_data>>24; // 2
     slot++; 
-    pseudo_file_sys[slot] = data_stop>>16; // 3
+    pseudo_file_sys[slot] = end_of_data>>16; // 3
     slot++;
-    pseudo_file_sys[slot] = data_stop>>8;  // 4
+    pseudo_file_sys[slot] = end_of_data>>8;  // 4
     slot++;
-    pseudo_file_sys[slot] = data_stop;     // 5
+    pseudo_file_sys[slot] = end_of_data;     // 5
     slot++;
     Serial.println("");
     // adress + file-names
@@ -173,7 +177,7 @@ void flash(void)
         slot++; 
         pseudo_file_sys[slot] = f_pos;
         slot++;
-        Serial.printf("-- > file # \%d\ (of %d) :: 0x%07X ...\r\n", i, fcnt, f_pos);
+        Serial.printf("-- > file # %d (of %d) :: 0x%07X ...\r\n", i, fcnt, f_pos);
         // write name (8.3) -- skip the extension
         _EXT = 0; //
         const char *tmp = filename[i].c_str();
@@ -187,7 +191,7 @@ void flash(void)
     page = INFO_ADR; // start from 0x0
     Serial.println("");   
     while(pages) {
-        Serial.printf("-- > Flashing info page # \%d\ (of %d) at file_position: 0x%07X ...\r\n", page+1, NUM_INFO_PAGES, page*PAGE);
+        Serial.printf("-- > Flashing info page # %d (of %d) at file_position: 0x%07X ...\r\n", page+1, NUM_INFO_PAGES, page*PAGE);
         uint8_t *sys = pseudo_file_sys+page*PAGE;
         flash_page_program(sys, page);
         pages--;
@@ -201,14 +205,14 @@ bool extract(void)
 {
     uint16_t num_files;
     uint16_t num_pages;
-    uint32_t data_stop;
-    unsigned char buf2[PAGE];
+    uint32_t end_of_data;
+    unsigned char buf[PAGE];
   
     Serial.println("");
     Serial.println("Extracting file info:");
     // file number?
-    flash_read_pages(buf2, INFO_ADR, 1);
-    num_files = ((uint16_t)(buf2[0]) << 0x8) + buf2[1];               // extract file #
+    flash_read_pages(buf, INFO_ADR, 1);
+    num_files = ((uint16_t)(buf[0]) << 0x8) + buf[1];               // extract file #
     
     if (!num_files || num_files > MAX_FILES)  { 
               Serial.println("-->  no files found"); 
@@ -216,15 +220,34 @@ bool extract(void)
     }
     else Serial.printf("-- > found %d file(s): ok \r\n", num_files); 
     //
-    data_stop = (buf2[2] << 24) + (buf2[3] << 16) + (buf2[4] << 8) + buf2[5];
+    end_of_data = (buf[2] << 24) + (buf[3] << 16) + (buf[4] << 8) + buf[5];
+    
     // ... ok, now, read file info:
     num_pages = 0x1 + ((num_files*INFO_SLOT_SIZE + _OFFSET) >> 0x8);  // info-page size
-    Serial.printf("-- > audio data starts at 0x%07X, ends at position: 0x%07X ...\r\n", num_pages*PAGE, data_stop);
+    Serial.printf("-- > audio data starts at 0x%07X, ends at position: 0x%07X ...\r\n", num_pages*PAGE, end_of_data);
     unsigned char tmp_buf[PAGE*num_pages];
     flash_read_pages(tmp_buf, INFO_ADR, num_pages);
     parse_INFO_PAGES(tmp_buf, num_files); 
-  
-    Serial.println("done.");
+    
+    // calc. length from positions:
+    uint16_t _pos = 0;
+    file_adr[num_files] = end_of_data; 
+    
+    while (_pos < num_files) {
+   
+           file_len[_pos] = file_adr[_pos+1] - file_adr[_pos]; // length in bytes
+           _pos++;
+          
+    }
+    // print file info:
+    _pos = 0;
+    while (_pos < num_files) {
+         
+         Serial.printf("%s -- > file_adr[%d] = 0x%07X.  (%d bytes) \r\n", file_name[_pos].c_str(), _pos, file_adr[_pos], file_len[_pos]);
+         _pos++;
+    }
+    
+    Serial.println("done.");Serial.println("");
     return true;
 }
     
@@ -248,17 +271,19 @@ void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
          adr += tmp << 8;
          tmp = *fileinfo; fileinfo++; // 4
          adr += tmp;
+         
          file_adr[_files-_f] = adr;   // file pos
+         
          uint8_t len = MAX_LEN; // names
-         char _x;
+         char _name[len+0x1];   // tmp String for name
          while (len) {
-               _x = recovered_names[_files-_f][MAX_LEN-len] = *fileinfo;  
-               Serial.print(_x); 
+               _name[MAX_LEN-len] = *fileinfo;  
                len--;   
                fileinfo++;  
-         };  // get name
-         
-         Serial.printf(" -- > file_adr[%d] = 0x%07X ......\r\n", _files - _f, adr);
+         };  
+         _name[MAX_LEN] = '\0';
+         file_name[_files-_f] = _name;
+         //Serial.printf(" -- > file_adr[%d] = 0x%07X ......\r\n", _files - _f, adr);
         _f--;
      }
      
@@ -319,8 +344,8 @@ void setup()
   
   if (!fsize) goto ready;
   if (fsize < FLASHSIZE) {
-      //flash_init(15);
-      flash_init();
+      flash_init(15);
+      //flash_init();
       int flashstatus = flash_read_status();
       flash_read_id(id_tab);
       Serial.printf("Flash Status: 0x%X, ID:0x%X,0x%X,0x%X,0x%X ", flashstatus , id_tab[0], id_tab[1], id_tab[2], id_tab[3]);   

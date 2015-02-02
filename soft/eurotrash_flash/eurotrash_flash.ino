@@ -33,8 +33,8 @@ AudioPlaySdWav           wav1, wav2, wav3, wav4;
 AudioPlaySdWav           *wav[4] = {&wav1, &wav2, &wav3, &wav4};
 AudioPlaySerialFlash     raw1, raw2, raw3, raw4;
 AudioPlaySerialFlash     *raw[4] = {&raw1, &raw2, &raw3, &raw4};
-AudioEffectFade          fade1, fade2, fade3, fade4;
-AudioEffectFade          *fade[4] = {&fade1, &fade2, &fade3, &fade4};
+AudioEffectFade          fade1, fade2, fade3, fade4, fade1r, fade2r, fade3r, fade4r;
+AudioEffectFade          *fade[8] = {&fade1, &fade2, &fade3, &fade4, &fade1r, &fade2r, &fade3r, &fade4r};
 AudioMixer4              mixL, mixR;
 AudioOutputI2S           pcm5102a;   
 
@@ -43,14 +43,19 @@ AudioConnection          ac_1(wav2, 0, fade2, 0);
 AudioConnection          ac_2(wav3, 0, fade3, 0);
 AudioConnection          ac_3(wav4, 0, fade4, 0);
 
-AudioConnection          ac_4(fade1, 0, mixL, 0);
-AudioConnection          ac_5(fade2, 0, mixL, 1);
-AudioConnection          ac_6(raw1,  0, mixL, 2);
-AudioConnection          ac_7(raw2,  0, mixL, 3);
-AudioConnection          ac_8(fade3, 0, mixR, 0);
-AudioConnection          ac_9(fade4, 0, mixR, 1);
-AudioConnection          ac_10(raw3, 0, mixR, 2);
-AudioConnection          ac_11(raw4, 0, mixR, 3);
+AudioConnection          ac_0r(raw1, 0, fade1r, 0);
+AudioConnection          ac_1r(raw2, 0, fade2r, 0);
+AudioConnection          ac_2r(raw3, 0, fade3r, 0);
+AudioConnection          ac_3r(raw4, 0, fade4r, 0);
+
+AudioConnection          ac_4(fade1,   0, mixL, 0);
+AudioConnection          ac_5(fade2,   0, mixL, 1);
+AudioConnection          ac_6(fade1r,  0, mixL, 2);
+AudioConnection          ac_7(fade2r,  0, mixL, 3);
+AudioConnection          ac_8(fade3,   0, mixR, 0);
+AudioConnection          ac_9(fade4,   0, mixR, 1);
+AudioConnection          ac_10(fade3r, 0, mixR, 2);
+AudioConnection          ac_11(fade4r, 0, mixR, 3);
 
 AudioConnection          ac_12(mixL, 0, pcm5102a, 0);
 AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
@@ -226,9 +231,6 @@ void setup() {
   
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);
-  //attachInterrupt(BUTTON_L, BUTTON_ISR_L, FALLING);
-  //attachInterrupt(BUTTON_R, BUTTON_ISR_R, FALLING);
-  
   attachInterrupt(ENC_L1, left_encoder_ISR, CHANGE);
   attachInterrupt(ENC_L2, left_encoder_ISR, CHANGE);
   attachInterrupt(ENC_R1, right_encoder_ISR, CHANGE);
@@ -242,7 +244,7 @@ void setup() {
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
-  info();
+  //info();
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */

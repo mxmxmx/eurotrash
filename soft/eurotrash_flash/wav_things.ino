@@ -28,14 +28,14 @@ void leftright() {
   
  if (LCLK) {  // clock?
   
-       play_x(LEFT);
+       _play(audioChannels[LEFT]);
        LCLK = false;
        FADE_LEFT = false;
        last_LCLK = millis();
   } 
   if (RCLK) { // clock?
  
-       play_x(RIGHT);
+       _play(audioChannels[RIGHT]);
        RCLK = false;
        FADE_RIGHT = false;
        last_RCLK = millis();
@@ -45,52 +45,46 @@ void leftright() {
 
 /* =============================================== */
 
-void play_x(uint8_t _channel) {
+void _play(struct audioChannel* _channel) {
   
-      uint8_t _swap, _select;
-      _swap   = audioChannels[_channel]->swap;                
-      _select = (_channel*CHANNELS) + _swap;                 // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)
-      fade[_select]->fadeIn(FADE_IN);                        // fade in object 1-4
-      next_wav(_select, _channel);                           // and play 
-  
-      /* now swap the file and fade out previous file: */
-      _swap = ~_swap & 1u;
-      _select = (_channel*CHANNELS) + _swap;
-      fade[_select]->fadeOut(FADE_OUT);
-      audioChannels[_channel]->swap = _swap;
-  
-}
- 
-/* =============================================== */
-
-void next_wav(uint8_t _select, uint8_t _channel) {
-  
-       uint8_t _bank = audioChannels[_channel]->bank;
-       /* file */
-       uint16_t _file = audioChannels[_channel]->file_wav; 
-       /* where to start from? */
-       int16_t _startPos = (HALFSCALE - CV[3-_channel])>>5;  // CV
-        _startPos += audioChannels[_channel]->pos0;          // add manual offset
-       /* limit */
-       if (_startPos < 0) _startPos = 0;
-       else if (_startPos >= CTRL_RESOLUTION) _startPos = CTRL_RESOLUTION-1;
-       /* scale */
-       uint32_t _playpos =  _startPos * audioChannels[_channel]->ctrl_res; 
-       /* raw or SD ? */
+      uint8_t _swap, _bank, _select, _id;
+      uint16_t _file;
+      int32_t _startPos;
+      
+      _swap   = _channel->swap;   
+      _bank   = _channel->bank;     
+      _id     = _channel->id; 
+      _file   = _channel->file_wav; 
+      
+      _select   = _id*CHANNELS + _swap;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)  
+      _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
+      _startPos += _channel->pos0;                    // add manual offset
+      
+      _startPos = _startPos < 0 ?  0 : _startPos;      
+      _startPos = _startPos < CTRL_RESOLUTION ? _startPos : CTRL_RESOLUTION-1;
+      _startPos *= _channel->ctrl_res; 
+       
+      _bank ? fade[_select+0x4]->fadeIn(1) : fade[_select]->fadeIn(FADE_IN);
+      
        if (_bank) {
             const unsigned int f_adr = RAW_FILE_ADR[_file];    
             raw[_select]->play(f_adr);    
        }
        else { 
              String playthis = FILES[_file];  
-             wav[_select]->seek(&playthis[0], _playpos>>9); 
-       }
-       /* now update channel data: */
-       audioChannels[_channel]->ctrl_res = CTRL_RES[_file + _bank*MAXFILES];
-       audioChannels[_channel]->ctrl_res_eof = CTRL_RES_EOF[_file + _bank*MAXFILES];
+             wav[_select]->seek(&playthis[0], _startPos>>9); 
+       }     
        
-}  
-
+       /*  swap the file and fade out previous file: */
+        _swap = ~_swap & 1u;
+        _select = (_id*CHANNELS) + _swap;
+        fade[_select]->fadeOut(FADE_OUT);
+        _channel->swap = _swap;
+       /*  update channel data: */
+        _channel->ctrl_res = CTRL_RES[_file + _bank*MAXFILES];
+        _channel->ctrl_res_eof = CTRL_RES_EOF[_file + _bank*MAXFILES]; 
+}
+ 
 /* =============================================== */
 
 void eof_left() {
@@ -105,15 +99,11 @@ void eof_left() {
         uint8_t  _swap = ~audioChannels[LEFT]->swap & 1u;
       
         digitalWriteFast(EOF_L, HIGH); 
-        if (_bank) {
-             
-        }
-        else fade[_swap]->fadeOut(FADE_OUT); 
-          
+        
+        _bank ? fade[_swap+0x4]->fadeOut(FADE_OUT) : fade[_swap]->fadeOut(FADE_OUT); 
         last_EOF_L = millis();
         EOF_L_OFF = FADE_LEFT = true;
-     } 
-     
+     }  
 }
 
 void eof_right() {
@@ -124,18 +114,15 @@ void eof_right() {
        
         FADE_RIGHT = true;
         uint8_t  _bank = audioChannels[RIGHT]->bank;
-        uint8_t  _swap = ~audioChannels[RIGHT]->swap & 1u;
+        uint8_t  _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS; 
           
         digitalWriteFast(EOF_R, HIGH);  
             
-        if (_bank) {
-             
-            }
-        else fade[CHANNELS+_swap]->fadeOut(FADE_OUT); 
+        _bank ? fade[_swap+0x4]->fadeOut(FADE_OUT) : fade[_swap]->fadeOut(FADE_OUT); 
            
         last_EOF_R = millis();
         EOF_R_OFF = FADE_RIGHT = true;
-      } 
+     } 
 }
 
 

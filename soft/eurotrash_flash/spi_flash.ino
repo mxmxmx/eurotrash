@@ -30,6 +30,8 @@ uint8_t spi_flash_init() {
   return flashstatus;
 }
 
+/*  ======================================== */
+
 void info() {
   
   Serial.println(" ");
@@ -106,6 +108,7 @@ uint8_t spi_flash(){
     return _files;
 }
 
+/*  ======================================== */
 
 uint16_t read_SDFLASH_dir(void) {
   
@@ -132,13 +135,13 @@ uint16_t read_SDFLASH_dir(void) {
   uint16_t num_pages = 0x1 + ((fcnt*INFO_SLOT_SIZE + _OFFSET) >> 0x8); // == # info pages; 12 bytes: pos + name + fcnt;
   fsize += num_pages*PAGE;
   if (fsize < FLASHSIZE) return fcnt;
-  else return 0x0;
-  
+  else return 0x0; 
 }
+
+/*  ======================================== */
 
 uint16_t verify(uint16_t fcnt_all)
 {
-  
     File dir;
     File entry;
     unsigned char buf[PAGE];
@@ -163,28 +166,30 @@ uint16_t verify(uint16_t fcnt_all)
    
     dir = SD.open(DIRECTORY); 
     while(fcnt < MAXFILES) {
-      entry = dir.openNextFile();
-      if (!entry) break;
-      pos = page * PAGE;
-      Serial.printf("%d. Verifying \"%s\" at file_position: 0x%07X...", fcnt+1, entry.name(), pos);
-      int rd =0;
-      do {
-        memset(buf, 0xff, PAGE);
-        rd = entry.read(buf, PAGE);
-        flash_read_pages(buf2, page, 1);
-        int v = 0;
-        for (int i=0; i<PAGE; i++) v+= buf[i]-buf2[i];
-        if (v) {Serial.println("no match");  dir.close(); return 0x0;}
-        pos += rd;         
-        page++;
-      } while (rd==PAGE);          
-      Serial.printf("ok.\r\n");
-      entry.close(); 
-      fcnt++;
+        entry = dir.openNextFile();
+        if (!entry) break;
+        pos = page * PAGE;
+        Serial.printf("%d. Verifying \"%s\" at file_position: 0x%07X...", fcnt+1, entry.name(), pos);
+        int rd =0;
+        do {
+            memset(buf, 0xff, PAGE);
+            rd = entry.read(buf, PAGE);
+            flash_read_pages(buf2, page, 1);
+            int v = 0;
+            for (int i=0; i<PAGE; i++) v+= buf[i]-buf2[i];
+            if (v) {Serial.println("no match");  dir.close(); return 0x0;}
+            pos += rd;         
+            page++;
+        } while (rd==PAGE);          
+        Serial.printf("ok.\r\n");
+        entry.close(); 
+        fcnt++;
     }
     dir.close();
     return fcnt;
 }
+
+/*  ======================================== */
 
 uint16_t flash(uint16_t num_files){
   
@@ -197,8 +202,7 @@ uint16_t flash(uint16_t num_files){
     uint16_t page = NUM_INFO_PAGES;
     uint32_t file_position[MAXFILES];
     String filename[MAXFILES];
-    
-    
+      
     dir = SD.open(DIRECTORY);
     
     while(fcnt < num_files) {
@@ -277,9 +281,10 @@ uint16_t flash(uint16_t num_files){
     }
     Serial.printf("done.\r\n");
     Serial.println("");
-    return fcnt;
-  
+    return fcnt;  
 }
+
+/*  ======================================== */
 
 uint16_t extract(void)
 {
@@ -287,9 +292,6 @@ uint16_t extract(void)
     uint16_t num_pages;
     uint32_t end_of_data;
     unsigned char buf[PAGE];
-  
-    //Serial.println("");
-    //Serial.println("Extracting file info:");
     // file number?
     flash_read_pages(buf, INFO_ADR, 1);
     num_files = ((uint16_t)(buf[0]) << 0x8) + buf[1];               // extract file #
@@ -298,8 +300,7 @@ uint16_t extract(void)
               //Serial.println("-->  no files found"); 
               return false; 
     }
-    //else Serial.printf(" -- > found %d file(s): ok \r\n", num_files); 
-    
+   
     end_of_data = (buf[2] << 24) + (buf[3] << 16) + (buf[4] << 8) + buf[5];
     // ... ok, now, read file info:
     num_pages = 0x1 + ((num_files*INFO_SLOT_SIZE + _OFFSET) >> 0x8);  // info-page size
@@ -317,12 +318,12 @@ uint16_t extract(void)
            CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/CTRL_RESOLUTION; // in bytes
            raw1.play(RAW_FILE_ADR[_pos]); delay(15);
            CTRL_RES_EOF[MAXFILES +_pos] = raw1.lengthMillis() / CTRL_RESOLUTION; 
-           _pos++;
-           
+           _pos++;         
     }
-
     return num_files;
 }
+
+/*  ======================================== */
 
 void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
   
@@ -333,26 +334,24 @@ void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
      while (_f) {
        
          uint32_t tmp, adr;
-         tmp = *fileinfo; fileinfo++; // 1
+         tmp = *fileinfo; fileinfo++;   // 1
          adr  = tmp << 24; 
-         tmp = *fileinfo; fileinfo++; // 2
+         tmp = *fileinfo; fileinfo++;   // 2
          adr += tmp << 16;
-         tmp = *fileinfo; fileinfo++; // 3
+         tmp = *fileinfo; fileinfo++;   // 3
          adr += tmp << 8;
-         tmp = *fileinfo; fileinfo++; // 4
+         tmp = *fileinfo; fileinfo++;   // 4
          adr += tmp;
          
-         RAW_FILE_ADR[_files-_f] = adr;   // file pos
-         uint8_t len = MAX_LEN; // names
+         RAW_FILE_ADR[_files-_f] = adr; // file pos
          
+         uint8_t len = MAX_LEN;         // names
          char _name[DISPLAY_LEN+0x1]; 
-        
          while (len) {  
                _name[MAX_LEN-len] = *fileinfo;
                len--;   
                fileinfo++;  
-         };  // get name
-         //_name[MAX_LEN+1] = '\0';
+         };  
          right_justify(_name);
          RAW_DISPLAYFILES[_files-_f] = _name;
          Serial.printf(" -- > RAW_FILE_ADR[%d] = 0x%07X ......\r\n", _files - _f, adr);
@@ -360,8 +359,10 @@ void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
      }
 };
 
+/*  ======================================== */
+
 char makenice(char _n, uint8_t _ext) {
-   
+   // TD: preserve numbers
    if (_ext) return ' ';
    
    char tmp = _n;   
@@ -371,33 +372,34 @@ char makenice(char _n, uint8_t _ext) {
    return tmp;
 }
 
-void right_justify(char *_name) {
+/*  ======================================== */
 
-                
+void right_justify(char *_name) {
+           
     uint8_t _offset = 0, _pos = 0, _justify = 0;
     
     char _tmp[DISPLAY_LEN+0x1];
     memcpy(_tmp, _name, MAX_LEN);
     
-    while(_pos < MAX_LEN) {         // name len ?
-      if (_name[_pos] == ' ') _offset++;
-      _pos++;
+    while(_pos < MAX_LEN) {         
+          if (_name[_pos] == ' ') _offset++;
+          _pos++;
     } 
     _justify = _offset;
-    _pos = 0; 
-    
-    while (_offset < DISPLAY_LEN) { // move to right 
-      _name[_offset+1] = _tmp[_pos];
-      _pos++; _offset++;
+    _pos = 0;     
+    while (_offset < DISPLAY_LEN) { 
+          _name[_offset+1] = _tmp[_pos];
+          _pos++; _offset++;
     }
     _pos = 0; 
-    while(_pos <= _justify) {       // fill up from left
-      
-      _name[_pos] = ' ';
-      _pos++; //
+    while(_pos <= _justify) {    
+          _name[_pos] = ' ';
+          _pos++; //
     }
      _name[DISPLAY_LEN] = '\0';
 }
+
+/*  ======================================== */
 
 void erase(void) {
     Serial.println("Erasing chip....");

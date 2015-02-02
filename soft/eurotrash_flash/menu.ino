@@ -4,7 +4,7 @@
 *
 */
 
-#define MAXFILES 128                 // we don't allow more than 128 files (for no particular reason); banks? (but would just add more menu pages)
+#define MAXFILES 128                 // we don't allow more than 128 files (for no particular reason); 
 uint8_t FILECOUNT;
 uint8_t RAW_FILECOUNT;
 const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
@@ -27,13 +27,14 @@ float DEFAULT_GAIN = 0.6;            // adjust default volume [0.0 - 1.0]
 
 uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
 const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
-uint8_t SLOW = 0;                    // encoder response
 int16_t prev_encoderdata[]  = {-999, -999};
 
 String leftdisplay  = "      0"; 
 String rightdisplay = "      0"; 
 uint8_t MENU_PAGE[CHANNELS] = {0,0};
 uint8_t filedisplay[CHANNELS];
+
+// misc messages 
 String _SAVE = "    save?";
 String _OK   = "       OK";
 String _FLASH_OK       = " FLASH OK";
@@ -179,7 +180,7 @@ void buttons(uint8_t _channel) {
   
           MENU_PAGE[_ch] = ENDPOS;
           int16_t end_pos = audioChannels[_ch]->pos1;
-          encoder[_channel].setPos(end_pos<<SLOW);
+          encoder[_channel].setPos(end_pos);
           update_display(_ch, end_pos);
           break; 
   } 
@@ -188,7 +189,7 @@ void buttons(uint8_t _channel) {
   
           MENU_PAGE[_ch] = FILESELECT;
           int8_t _file = audioChannels[_ch]->file_wav;
-          encoder[_channel].setPos(_file<<SLOW);
+          encoder[_channel].setPos(_file);
           update_display(_ch, _file);
           break; 
   }     
@@ -294,8 +295,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
      case FLASH: {
           
            if (!_channel) {           
-               switch (_newval) {
-                       
+               switch (_newval) {                     
                        case FLASH_OK:     { msg = _FLASH_OK;     break; }
                        case FLASH_NOT_OK: { msg = _FLASH_NOT_OK; break; }
                        case ALLGOOD:      { msg = _ALLGOOD;      break; }
@@ -307,8 +307,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
                break;
           }
           else  { 
-              switch (_newval) {
-                
+              switch (_newval) {       
                       case FCNT:           { msg = _FCNT;    break; }
                       case ALLGOOD:        { msg = _DOT;     break; }
                       default: break;
@@ -343,12 +342,5 @@ void _adc() {
        if (ADC_cycle >= numADC)  ADC_cycle = 0; 
        CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
        update_eof(ADC_cycle);
-        
-       /*if (!ADC_cycle) Serial.println(" ||| ");
-       else Serial.print(" || ");
-       Serial.print(CV[ADC_cycle]);
-       Serial.print(" -> ");
-       Serial.print(ADC_cycle);
-       */
 }  
 

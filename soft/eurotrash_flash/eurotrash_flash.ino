@@ -2,15 +2,17 @@
 *   eurotrash
 *   dual wav player (test version).
 *
-*   files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
+*   - wav files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
 *   micro SD card should be class 10.
 *
+*   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
+*   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
+*
 *  
 */
-
 
 #include <Audio.h>
 #include <Wire.h>
@@ -74,7 +76,7 @@ AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
 #define CS_SD 10   
 
-//#define REV1
+#define REV1
 
 #ifdef REV1
   #define CS_MEM 15   // rev1
@@ -95,7 +97,6 @@ uint16_t HALFSCALE = 0;
 /* encoders */ 
 Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}}; 
 
-
 /* ----------------------- timers + ISR stuff ------------------------ */
 
 volatile uint8_t LCLK;   
@@ -115,7 +116,6 @@ volatile uint8_t _ADC = false;
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { _ADC = true; }
 
-
 /* ----------------------- output channels --------------- */
 
 #define CHANNELS 2
@@ -130,7 +130,7 @@ typedef struct audioChannel {
     uint32_t    pos0;          // file start pos
     uint32_t    pos1;          // end pos
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
-    uint32_t    ctrl_res_eof;  // eof resolution  (in bytes) 
+    uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
     uint32_t     eof;          // end of file (in bytes)
     uint8_t     swap;          // ping-pong file (1/2; 3/4)
@@ -196,18 +196,17 @@ void setup() {
   mixR.gain(2, 0);
   mixR.gain(3, 0);
   
-  /* get wav from SD*/
+  /*  get wav from SD */
   generate_file_list();
- 
+  /* ...and spi flash */
   SPI_FLASH_STATUS = spi_flash_init();
-  /*  update spi flash ?   */
+  /*  update spi flash ? */
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
   /*  files on spi flash ? */
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
   
   /* begin timers and HW serial */
   ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
-  
   UI_timer.begin(UItimerCallback, UI_RATE);
   
   /* allocate memory for L/R + init */
@@ -248,13 +247,11 @@ void setup() {
 
 /* main loop, wherein we mainly wait for the clock-flags */
 
-uint32_t wait = 0;
-
 void loop() 
 {
   
   while(1) {
- 
+  
      leftright();
    
      if (!FADE_LEFT) eof_left();

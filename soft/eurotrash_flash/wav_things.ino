@@ -79,12 +79,10 @@ void next_wav(uint8_t _select, uint8_t _channel) {
        /* raw or SD ? */
        if (_bank) {
             const unsigned int f_adr = RAW_FILE_ADR[_file];    
-            Serial.println(f_adr, HEX); 
-            if (!_channel) raw[_select]->play(f_adr);     
+            raw[_select]->play(f_adr);    
        }
        else { 
              String playthis = FILES[_file];  
-             /* -> play file X from pos Y */
              wav[_select]->seek(&playthis[0], _playpos>>9); 
        }
        /* now update channel data: */
@@ -101,8 +99,7 @@ void eof_left() {
     //uint32_t _pos  = _bank ? raw[_swap]->positionBytes() : wav[_swap]->positionBytes();
   
    if (millis() - last_LCLK > audioChannels[LEFT]->eof) {
-     //if (_pos > audioChannels[LEFT]->eof) {  
-       
+  
         FADE_LEFT = true;
         uint8_t  _bank = audioChannels[LEFT]->bank;
         uint8_t  _swap = ~audioChannels[LEFT]->swap & 1u;
@@ -124,8 +121,7 @@ void eof_right() {
     // uint32_t _pos  = _bank ? raw[_swap]->positionBytes() : wav[_swap]->positionBytes();
   
     if (millis() - last_RCLK > audioChannels[RIGHT]->eof) {
-    //   if (_pos > audioChannels[RIGHT]->eof) {   
-             
+       
         FADE_RIGHT = true;
         uint8_t  _bank = audioChannels[RIGHT]->bank;
         uint8_t  _swap = ~audioChannels[RIGHT]->swap & 1u;

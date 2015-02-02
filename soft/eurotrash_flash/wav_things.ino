@@ -39,7 +39,6 @@ void leftright() {
        RCLK = false;
        FADE_RIGHT = false;
        last_RCLK = millis();
- 
    } 
 }
 
@@ -56,26 +55,27 @@ void _play(struct audioChannel* _channel) {
       _id     = _channel->id; 
       _file   = _channel->file_wav; 
       
-      _select   = _id*CHANNELS + _swap;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT)  
+      _select   = _id*CHANNELS + _swap;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
+      
       _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
-      _startPos += _channel->pos0;                    // add manual offset
-      
-      _startPos = _startPos < 0 ?  0 : _startPos;      
+      _startPos += _channel->pos0;                    // manual offset  
+      _startPos = _startPos < 0 ?  0 : _startPos;     // limit  
       _startPos = _startPos < CTRL_RESOLUTION ? _startPos : CTRL_RESOLUTION-1;
-      _startPos *= _channel->ctrl_res; 
+      _startPos *= _channel->ctrl_res;                // scale
        
-      _bank ? fade[_select+0x4]->fadeIn(1) : fade[_select]->fadeIn(FADE_IN);
-      
        if (_bank) {
+            // TD: startPos
+            fade[_select+0x4]->fadeIn(1);
             const unsigned int f_adr = RAW_FILE_ADR[_file];    
             raw[_select]->play(f_adr);    
        }
        else { 
+             fade[_select]->fadeIn(FADE_IN);
              String playthis = FILES[_file];  
              wav[_select]->seek(&playthis[0], _startPos>>9); 
        }     
        
-       /*  swap the file and fade out previous file: */
+       /*  swap file and fade out previous file: */
         _swap = ~_swap & 1u;
         _select = (_id*CHANNELS) + _swap;
         fade[_select]->fadeOut(FADE_OUT);
@@ -88,7 +88,6 @@ void _play(struct audioChannel* _channel) {
 /* =============================================== */
 
 void eof_left() {
-  
     
     //uint32_t _pos  = _bank ? raw[_swap]->positionBytes() : wav[_swap]->positionBytes();
   
@@ -125,6 +124,7 @@ void eof_right() {
      } 
 }
 
+/* =============================================== */
 
 void generate_file_list() {  // to do - sort alphabetically?
   
@@ -232,8 +232,7 @@ void calibrate() {
       LASTBUTTON = millis(); 
 } 
 
-
-/* some stuff to save the ADC calibration value */
+/* =============================================== */
 
 void writeMIDpoint(uint16_t _val) {
    
@@ -247,6 +246,8 @@ void writeMIDpoint(uint16_t _val) {
        adr++;
        EEPROM.write(adr, byte1);
 }  
+
+/* =============================================== */
 
 uint16_t readMIDpoint() {
   

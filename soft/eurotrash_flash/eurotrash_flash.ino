@@ -11,7 +11,9 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*  
+*   - TD:
+*   - get SPIFIFO working
+*   - raw start pos
 */
 
 #include <Audio.h>

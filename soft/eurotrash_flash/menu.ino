@@ -22,9 +22,7 @@ enum {
    _FLASH
 };
 
-
 float DEFAULT_GAIN = 0.6;            // adjust default volume [0.0 - 1.0]
-
 uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
 const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
 int16_t prev_encoderdata[]  = {-999, -999};

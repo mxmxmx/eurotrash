@@ -2,18 +2,19 @@
 *   eurotrash
 *   dual wav player (test version).
 *
-*   files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
+*   - wav files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
 *   micro SD card should be class 10.
 *
-*   to do:
-*   - SD raw/mono option 
-*   - integrate SPI flash [long press ?]
-*   - move to ADC/DMA [not really needed ?]
+*   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
+*   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
+*
+*   - TD:
+*   - get SPIFIFO working
+*   - raw start pos
 */
-
 
 #include <Audio.h>
 #include <Wire.h>
@@ -21,6 +22,8 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
+#include <play_rawflash15.h>
+#include <flash_spi.h>
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
 #define BAUD 115200
@@ -30,22 +33,34 @@ File root;
 
 AudioPlaySdWav           wav1, wav2, wav3, wav4;
 AudioPlaySdWav           *wav[4] = {&wav1, &wav2, &wav3, &wav4};
-AudioEffectFade          fade1, fade2, fade3, fade4;
-AudioEffectFade          *fade[4] = {&fade1, &fade2, &fade3, &fade4};
+AudioPlaySerialFlash     raw1, raw2, raw3, raw4;
+AudioPlaySerialFlash     *raw[4] = {&raw1, &raw2, &raw3, &raw4};
+AudioEffectFade          fade1, fade2, fade3, fade4, fade1r, fade2r, fade3r, fade4r;
+AudioEffectFade          *fade[8] = {&fade1, &fade2, &fade3, &fade4, &fade1r, &fade2r, &fade3r, &fade4r};
 AudioMixer4              mixL, mixR;
-AudioOutputI2S           dac;   
+AudioOutputI2S           pcm5102a;   
 
-AudioConnection          link_0(wav1, 0, fade1, 0);
-AudioConnection          link_1(wav2, 0, fade2, 0);
-AudioConnection          link_2(wav3, 0, fade3, 0);
-AudioConnection          link_3(wav4, 0, fade4, 0);
+AudioConnection          ac_0(wav1, 0, fade1, 0);
+AudioConnection          ac_1(wav2, 0, fade2, 0);
+AudioConnection          ac_2(wav3, 0, fade3, 0);
+AudioConnection          ac_3(wav4, 0, fade4, 0);
 
-AudioConnection          link_4(fade1, 0, mixL, 0);
-AudioConnection          link_5(fade2, 0, mixL, 1);
-AudioConnection          link_6(fade3, 0, mixR, 0);
-AudioConnection          link_7(fade4, 0, mixR, 1);
-AudioConnection          link_8(mixL, 0, dac, 0);
-AudioConnection          link_9(mixR, 0, dac, 1);
+AudioConnection          ac_0r(raw1, 0, fade1r, 0);
+AudioConnection          ac_1r(raw2, 0, fade2r, 0);
+AudioConnection          ac_2r(raw3, 0, fade3r, 0);
+AudioConnection          ac_3r(raw4, 0, fade4r, 0);
+
+AudioConnection          ac_4(fade1,   0, mixL, 0);
+AudioConnection          ac_5(fade2,   0, mixL, 1);
+AudioConnection          ac_6(fade1r,  0, mixL, 2);
+AudioConnection          ac_7(fade2r,  0, mixL, 3);
+AudioConnection          ac_8(fade3,   0, mixR, 0);
+AudioConnection          ac_9(fade4,   0, mixR, 1);
+AudioConnection          ac_10(fade3r, 0, mixR, 2);
+AudioConnection          ac_11(fade4r, 0, mixR, 3);
+
+AudioConnection          ac_12(mixL, 0, pcm5102a, 0);
+AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
 /* ------------------------- pins ------------------------ */
 
@@ -89,29 +104,24 @@ uint16_t HALFSCALE = 0;
 /* encoders */ 
 Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}}; 
 
-
 /* ----------------------- timers + ISR stuff ------------------------ */
 
 volatile uint8_t LCLK;   
 volatile uint8_t RCLK;
-volatile uint8_t BUTTON;
 uint32_t LASTBUTTON;
-const uint16_t DEBOUNCE = 400;
+const uint16_t DEBOUNCE = 250;
 
 void CLK_ISR_L() { LCLK = true; }
 void CLK_ISR_R() { RCLK = true; }
-void BUTTON_ISR_L() { BUTTON = 0x01; }
-void BUTTON_ISR_R() { BUTTON = 0x02; }
 
 IntervalTimer UI_timer, ADC_timer;
 volatile uint8_t UI  = false;
 volatile uint8_t _ADC = false;
 
 #define UI_RATE  15000  // UI update rate
-#define ADC_RATE 250   // ADC sampling rate (*4)
+#define ADC_RATE 250    // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { _ADC = true; }
-
 
 /* ----------------------- output channels --------------- */
 
@@ -124,32 +134,37 @@ typedef struct audioChannel {
   
     uint8_t     id;            // channel L/R
     uint8_t     file_wav;      // fileSelect
-    uint32_t    pos0;          // file start pos
-    uint32_t    pos1;          // end pos
+    uint32_t    pos0;          // file start pos manual
+    uint32_t    posX;          // end pos
+    uint32_t    srt;           // start pos
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
-    uint32_t     eof;          // end of file (in ms)
+    uint32_t     eof;          // end of file (in bytes)
     uint8_t     swap;          // ping-pong file (1/2; 3/4)
+    uint8_t     bank;          // bank: SD / Flash
 
 } audioChannel;
 
 struct audioChannel *audioChannels[CHANNELS];
 
-const uint8_t  FADE_IN  = 8;   // fade in  (adjust to your liking)
+const uint8_t  FADE_IN  = 4;   // fade in  (adjust to your liking)
 const uint16_t FADE_OUT = 100;  // fade out (ditto)
 uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
 const uint8_t TRIG_LENGTH = 25; // trig length / clock out
 
+uint8_t SPI_FLASH_STATUS = 0;
 
 /* ------------------------------------------------------ */
 
 void setup() {
  
+  //while (!Serial) {;}  
+  delay(100); 
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
-  analogReadAveraging(16);   
+  analogReadAveraging(4);   
   /* clk inputs and switches need the pullups */
   pinMode(CLK_L, INPUT_PULLUP);
   pinMode(CLK_R, INPUT_PULLUP);
@@ -160,9 +175,7 @@ void setup() {
   pinMode(EOF_R, OUTPUT);  
   digitalWrite(EOF_L, LOW);
   digitalWrite(EOF_R, LOW);
-  /* prevent conflicts with spi flash */
-  pinMode(CS_MEM, OUTPUT);
-  digitalWrite(CS_MEM, HIGH);
+  
   /* audio API */
   AudioMemory(15);
 
@@ -176,20 +189,32 @@ void setup() {
     }
   }
   delay(100);
-  /* zero volume while we generate the file list */
-  mixL.gain(0, 0);
-  mixL.gain(1, 0);
-  mixR.gain(0, 0);
-  mixR.gain(1, 0);
-  
-  generate_file_list();
-  /* begin timers and HW serial */
-  ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
-  
+   
   HWSERIAL.begin(BAUD);
   HWSERIAL.print('\n');
   delay(10);
   
+  /* zero volume while we generate the file list */
+  mixL.gain(0, 0);
+  mixL.gain(1, 0);
+  mixL.gain(2, 0);
+  mixL.gain(3, 0);
+  mixR.gain(0, 0);
+  mixR.gain(1, 0);
+  mixR.gain(2, 0);
+  mixR.gain(3, 0);
+  
+  /*  get wav from SD */
+  generate_file_list();
+  /* ...and spi flash */
+  SPI_FLASH_STATUS = spi_flash_init();
+  /*  update spi flash ? */
+  if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
+  /*  files on spi flash ? */
+  if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
+  
+  /* begin timers and HW serial */
+  ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
   UI_timer.begin(UItimerCallback, UI_RATE);
   
   /* allocate memory for L/R + init */
@@ -200,14 +225,15 @@ void setup() {
   /* set volume */
   mixL.gain(0, audioChannels[LEFT]->_gain);
   mixL.gain(1, audioChannels[LEFT]->_gain);
+  mixL.gain(2, audioChannels[LEFT]->_gain);
+  mixL.gain(3, audioChannels[LEFT]->_gain);
   mixR.gain(0, audioChannels[RIGHT]->_gain);
   mixR.gain(1, audioChannels[RIGHT]->_gain);
+  mixR.gain(2, audioChannels[RIGHT]->_gain);
+  mixR.gain(3, audioChannels[RIGHT]->_gain);
   
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);
-  attachInterrupt(BUTTON_L, BUTTON_ISR_L, FALLING);
-  attachInterrupt(BUTTON_R, BUTTON_ISR_R, FALLING);
-  
   attachInterrupt(ENC_L1, left_encoder_ISR, CHANGE);
   attachInterrupt(ENC_L2, left_encoder_ISR, CHANGE);
   attachInterrupt(ENC_R1, right_encoder_ISR, CHANGE);
@@ -221,6 +247,7 @@ void setup() {
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
+  //info();
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */
@@ -229,65 +256,22 @@ void loop()
 {
   
   while(1) {
- 
+  
      leftright();
-
-     /* eof left? */
    
-     if (!FADE_LEFT && ((millis() - last_LCLK > audioChannels[LEFT]->eof))) {
-        
-        digitalWriteFast(EOF_L, HIGH);  
-        fade1.fadeOut(FADE_OUT); // to do: we only need to fade out the file that's playing
-        fade2.fadeOut(FADE_OUT);      
-        last_EOF_L = millis();
-        EOF_L_OFF = FADE_LEFT = true;
-     } 
+     if (!FADE_LEFT) eof_left();
        
      leftright();
    
-     /* eof right? */
+     if (!FADE_RIGHT) eof_right();
+     
+     leftright();
    
-     if (!FADE_RIGHT && ((millis() - last_RCLK > audioChannels[RIGHT]->eof))) {
-        
-        digitalWriteFast(EOF_R, HIGH);
-        fade3.fadeOut(FADE_OUT);
-        fade4.fadeOut(FADE_OUT);
-        last_EOF_R = millis();
-        EOF_R_OFF = FADE_RIGHT = true;
-     }
+     if (UI) _UI();
    
      leftright();
    
-     if (UI) {
-       update_enc();
-       UI = false;
-     }
-   
-     leftright();
-   
-     if (BUTTON && (millis() - LASTBUTTON > DEBOUNCE)) {
-       buttons(BUTTON-0x01);
-       BUTTON = false;  
-       LASTBUTTON = millis();  
-     } 
-   
-     leftright();
-   
-     if (_ADC) {
-   
-       _ADC = false;
-       ADC_cycle++;
-       if (ADC_cycle >= numADC)  ADC_cycle = 0; 
-       CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
-       update_eof(ADC_cycle);
-        
-       /*if (!ADC_cycle) Serial.println(" ||| ");
-       else Serial.print(" || ");
-       Serial.print(CV[ADC_cycle]);
-       Serial.print(" -> ");
-       Serial.print(ADC_cycle);
-       */
-     }  
+     if (_ADC) _adc();
    
      leftright();
     
@@ -296,7 +280,7 @@ void loop()
      leftright();
    
      if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
-  }
+  } 
 }
 
 /* ------------------------------------------------------------ */

@@ -12,13 +12,14 @@ void init_channels(uint8_t f) {
         audioChannels[i]->id = i;
         audioChannels[i]->file_wav = _file;
         audioChannels[i]->pos0 = 0;
-        audioChannels[i]->pos1 = CTRL_RESOLUTION;
+        audioChannels[i]->posX = CTRL_RESOLUTION;
+        audioChannels[i]->srt = 0;
         audioChannels[i]->ctrl_res = CTRL_RES[_file];
         audioChannels[i]->ctrl_res_eof = CTRL_RES_EOF[_file];
         audioChannels[i]->eof = CTRL_RESOLUTION * CTRL_RES_EOF[_file];
         audioChannels[i]->_gain = DEFAULT_GAIN;  
         audioChannels[i]->swap = false;
-        audioChannels[i]->bank = true;
+        audioChannels[i]->bank = false;
   } 
 }  
 
@@ -61,7 +62,8 @@ void _play(struct audioChannel* _channel) {
       _startPos += _channel->pos0;                    // manual offset  
       _startPos = _startPos < 0 ?  0 : _startPos;     // limit  
       _startPos = _startPos < CTRL_RESOLUTION ? _startPos : (CTRL_RESOLUTION - 0x1);
-      _startPos *= _channel->ctrl_res;                // scale
+      _channel->srt = _startPos;                      // remember start pos  
+      _startPos *= _channel->ctrl_res;                // scale => bytes
        
        if (_bank) {
             // TD: startPos
@@ -70,7 +72,6 @@ void _play(struct audioChannel* _channel) {
             raw[_numVoice]->play(f_adr);    
        }
        else { 
-      
              fade[_numVoice]->fadeIn(FADE_IN);
              String playthis = FILES[_file];  
              wav[_numVoice]->seek(&playthis[0], _startPos>>9); 
@@ -152,7 +153,7 @@ void generate_file_list() {  // to do - sort alphabetically?
              
                       CTRL_RES[FILECOUNT]  = file_len / CTRL_RESOLUTION;       // ctrl resolution pos0/bytes
                       file_len_ms = wav1.lengthMillis();
-                      CTRL_RES_EOF[FILECOUNT] = file_len_ms / CTRL_RESOLUTION; // ctrl resolution pos1/bytes
+                      CTRL_RES_EOF[FILECOUNT] = file_len_ms / CTRL_RESOLUTION; // ctrl resolution posX/bytes
                       wav1.stop();
                       /* for the display, get rid of .wav extension + right justify */
                       int8_t justify = DISPLAY_LEN - len;
@@ -181,14 +182,16 @@ void update_eof(uint8_t _channel) {
   
         /* update EOF */
    if (_channel < CHANNELS) { 
-       int16_t _CV, tmp, tmp2; 
-       _CV = (HALFSCALE - CV[_channel])>>5;                    // CV
-       tmp  = audioChannels[_channel]->pos1 + _CV;             // length
-       tmp2 = CTRL_RESOLUTION - audioChannels[_channel]->pos0; // max length
-       if (tmp > tmp2) tmp = tmp2;
-       else if (tmp <= 1) tmp = 1;
-       audioChannels[_channel]->eof = tmp * audioChannels[_channel]->ctrl_res_eof;
      
+       int32_t _srt, _end; 
+       _end = (HALFSCALE - CV[_channel])>>0x5;               
+       _end += audioChannels[_channel]->posX;               
+       _end = _end < 0 ? 0 : _end;
+       _end = _end < CTRL_RESOLUTION ? _end : CTRL_RESOLUTION - 0x1;
+       
+       _srt =  audioChannels[_channel]->srt;          
+       _srt = (CTRL_RESOLUTION - _srt) * audioChannels[_channel]->ctrl_res_eof ; // = effective length in ms  
+       audioChannels[_channel]->eof = _srt / CTRL_RESOLUTION * _end;
     }
 }  
 /* =============================================== */

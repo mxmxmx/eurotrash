@@ -177,7 +177,7 @@ void buttons(uint8_t _channel) {
   case STARTPOS: { // start pos
   
           MENU_PAGE[_ch] = ENDPOS;
-          int16_t end_pos = audioChannels[_ch]->pos1;
+          int16_t end_pos = audioChannels[_ch]->posX;
           encoder[_channel].setPos(end_pos);
           update_display(_ch, end_pos);
           break; 
@@ -276,7 +276,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
      case ENDPOS: {
            if (tmp < 1)  { tmp = 1; encoder[_channel].setPos(0x1); }
            else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
-           audioChannels[_channel]->pos1 = tmp;
+           audioChannels[_channel]->posX = tmp;
            msg = makedisplay(tmp);
            cmd +=0x04;
            break;

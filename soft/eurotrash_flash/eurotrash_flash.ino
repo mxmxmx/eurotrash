@@ -83,7 +83,7 @@ AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
 #define CS_SD 10   
 
-#define REV1
+//#define REV1
 
 #ifdef REV1
   #define CS_MEM 15   // rev1
@@ -134,8 +134,9 @@ typedef struct audioChannel {
   
     uint8_t     id;            // channel L/R
     uint8_t     file_wav;      // fileSelect
-    uint32_t    pos0;          // file start pos
-    uint32_t    pos1;          // end pos
+    uint32_t    pos0;          // file start pos manual
+    uint32_t    posX;          // end pos
+    uint32_t    srt;           // start pos
     uint32_t    ctrl_res;      // start pos resolution (in bytes)
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 

@@ -66,10 +66,10 @@ void _play(struct audioChannel* _channel) {
       _startPos *= _channel->ctrl_res;                // scale => bytes
        
        if (_bank) {
-            // TD: startPos
             fade[_numVoice+0x4]->fadeIn(1);
             const unsigned int f_adr = RAW_FILE_ADR[_file];    
             raw[_numVoice]->play(f_adr);    
+            raw[_numVoice]->setPositionBytes(_startPos);  
        }
        else { 
              fade[_numVoice]->fadeIn(FADE_IN);

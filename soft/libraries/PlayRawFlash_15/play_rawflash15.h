@@ -1,4 +1,3 @@
-
 /* Audio Library for Teensy 3.X
  * Copyright (c) 2014, Paul Stoffregen, paul@pjrc.com
  *
@@ -27,8 +26,8 @@
 
 // Modified to play from Serial Flash (c) Frank Bösing, 2014/12, 2015
 
-#ifndef play_rawflash15_h_
-#define play_rawflash15_h_
+#ifndef play_serialflash_h_
+#define play_serialflash_h_
 /*
 	Set AUDIOBOARD to 1 if you use the PJRC-Audioboard, else 0
 */
@@ -50,7 +49,9 @@
 
 #if SERIALFLASH_USE_SPIFIFO
 #include <Arduino.h>
+#include <SPI.h>
 #include <SPIFIFO.h>
+#include "spi_interrupt.h"
 #else
 #include <SPI.h>
 #include "spi_interrupt.h"
@@ -67,28 +68,25 @@ public:
 	bool pause(bool _paused);
 	uint32_t positionMillis(void);
 	uint32_t lengthMillis(void);
+	void setPositionMillis(const unsigned int millis);
+	void setPositionBytes(const unsigned int _n);
 	virtual void update(void);
-    
 protected:
-	void flashinit(void);
-	void readSerFlash(uint8_t* buffer, const size_t position, const size_t bytes);
-	void readSerStart(const size_t position);
-	void readSerDone(void);
-	uint32_t calcMillis(uint32_t position);
+	void flashinit(void);	
+	inline void readSerStart(const size_t position) __attribute__((always_inline));
+	inline void readSerDone(void) __attribute__((always_inline));
 private:
-#if !SERIALFLASH_USE_SPIFIFO
 	SPISettings spisettings;
-#endif
 	unsigned int next;
 	unsigned int beginning;
 	uint32_t length;
 	int16_t prior;
-	uint8_t playing;
-	bool paused;
-	//bool loops;
-	void flash_init(void);
+	volatile uint8_t playing;
+	volatile bool paused;	
 	//uint32_t cyc;
+	inline uint32_t b2m(void) __attribute__((always_inline));
+	inline uint32_t calcMillis(uint32_t position) __attribute__((always_inline));
+	inline int BytesConsumedPerUpdate(void)  __attribute__((always_inline));	
 };
 
 #endif
-

@@ -12,8 +12,7 @@
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
 *   - TD:
-*   - get SPIFIFO working
-*   - raw start pos
+*   - move raw to SPIFIFO
 */
 
 #include <Audio.h>
@@ -62,7 +61,43 @@ AudioConnection          ac_11(fade4r, 0, mixR, 3);
 AudioConnection          ac_12(mixL, 0, pcm5102a, 0);
 AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
-/* ------------------------- pins ------------------------ */
+/* ----------------------- output channels --------------- */
+
+#define CHANNELS 2
+#define LEFT  0
+#define RIGHT 1
+#define INIT_FILE 0
+
+typedef struct audioChannel {
+  
+    uint8_t     id;            // channel L/R
+    uint8_t     file_wav;      // fileSelect
+    uint32_t    pos0;          // file start pos manual
+    uint32_t    posX;          // end pos
+    uint32_t    srt;           // start pos
+    uint32_t    ctrl_res;      // start pos resolution (in bytes)
+    uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
+    float       _gain;         // volume 
+    uint32_t    eof;           // end of file (in ms)
+    uint8_t     swap;          // ping-pong file (1/2; 3/4)
+    uint8_t     bank;          // bank: SD / Flash
+
+} audioChannel;
+
+struct audioChannel *audioChannels[CHANNELS];
+
+/* ----------------------- channel misc ------------------- */
+
+const uint8_t  FADE_IN  = 4;   // fade in  (adjust to your liking)
+const uint16_t FADE_OUT = 100;  // fade out (ditto)
+
+uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
+uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
+const uint8_t TRIG_LENGTH = 25; // trig length / clock out
+
+uint8_t SPI_FLASH_STATUS = 0;
+
+/* ------------------------- pins ------------------------- */
 
 #define CLK_L 2
 #define CLK_R 0
@@ -122,39 +157,6 @@ volatile uint8_t _ADC = false;
 #define ADC_RATE 250    // ADC sampling rate (*4)
 void UItimerCallback()  { UI = true;  }
 void ADCtimerCallback() { _ADC = true; }
-
-/* ----------------------- output channels --------------- */
-
-#define CHANNELS 2
-#define LEFT  0
-#define RIGHT 1
-#define INIT_FILE 0
-
-typedef struct audioChannel {
-  
-    uint8_t     id;            // channel L/R
-    uint8_t     file_wav;      // fileSelect
-    uint32_t    pos0;          // file start pos manual
-    uint32_t    posX;          // end pos
-    uint32_t    srt;           // start pos
-    uint32_t    ctrl_res;      // start pos resolution (in bytes)
-    uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
-    float       _gain;         // volume 
-    uint32_t     eof;          // end of file (in bytes)
-    uint8_t     swap;          // ping-pong file (1/2; 3/4)
-    uint8_t     bank;          // bank: SD / Flash
-
-} audioChannel;
-
-struct audioChannel *audioChannels[CHANNELS];
-
-const uint8_t  FADE_IN  = 4;   // fade in  (adjust to your liking)
-const uint16_t FADE_OUT = 100;  // fade out (ditto)
-uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
-uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
-const uint8_t TRIG_LENGTH = 25; // trig length / clock out
-
-uint8_t SPI_FLASH_STATUS = 0;
 
 /* ------------------------------------------------------ */
 

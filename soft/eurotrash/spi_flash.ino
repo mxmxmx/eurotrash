@@ -20,9 +20,11 @@ uint8_t _EXT = false;
 /*  ======================================== */
 
 void re_init_SPIFIFO(void) {
-  
+ 
+        #ifdef REV1
 	SPIFIFO.begin(CS_MEM, _SPICLOCK_MAX); // SPIFIFO hack
-
+        #endif
+        
         uint16_t _pos = 0;
         while (_pos < RAW_FILECOUNT) {
    
@@ -45,7 +47,7 @@ uint8_t spi_flash_init() {
   Serial.printf("Flash Status: 0x%X, ID:0x%X,0x%X,0x%X,0x%X ", flashstatus , id_tab[0], id_tab[1], id_tab[2], id_tab[3]);   
   if (id_tab[0]!=0xef || id_tab[1]!=0x40 || id_tab[2]!=0x18 || id_tab[3]!=0x00) flashstatus = 0x0;
   else flashstatus  = 0x1; // flash ok
- 
+  Serial.println("");
   return flashstatus;
 }
 
@@ -67,6 +69,7 @@ void info() {
   }
   Serial.print("total: # "); Serial.println(RAW_FILECOUNT);
   // to do: file len, ctrl res etc: FILE_LEN[MAXFILES*2]; etc 
+  Serial.println("ok");
 }
 
 uint8_t spi_flash(){

@@ -26,8 +26,8 @@
 
 // Modified to play from Serial Flash (c) Frank Bösing, 2014/12, 2015
 
-#ifndef play_serialflash_h_
-#define play_serialflash_h_
+#ifndef play_rawflash13_h_
+#define play_rawflash13_h_
 /*
 	Set AUDIOBOARD to 1 if you use the PJRC-Audioboard, else 0
 */
@@ -69,7 +69,7 @@ public:
 	uint32_t positionMillis(void);
 	uint32_t lengthMillis(void);
 	void setPositionMillis(const unsigned int millis);
-	void setPositionBytes(const unsigned int _n);
+	void setPositionSamples(const unsigned int _n);
 	virtual void update(void);
 protected:
 	void flashinit(void);	

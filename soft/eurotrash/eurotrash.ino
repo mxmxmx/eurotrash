@@ -11,8 +11,10 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*
+*   - TD fix SPIFIFO for CS = 13
 */
+
+//#define REV1
 
 #include <Audio.h>
 #include <Wire.h>
@@ -20,7 +22,8 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
-#include <play_rawflash15.h>
+#include <play_rawflash13.h>
+//#include <play_rawflash15.h>
 #include <flash_spi.h>
 #include <SPIFIFO.h>
 
@@ -117,8 +120,6 @@ uint8_t SPI_FLASH_STATUS = 0;
 #define ENC_R2 6 
 
 #define CS_SD 10   
-
-//#define REV1
 
 #ifdef REV1
   #define CS_MEM 15   // rev1
@@ -252,7 +253,6 @@ void setup() {
   mixR.gain(1, audioChannels[RIGHT]->_gain);
   mixR.gain(2, audioChannels[RIGHT]->_gain);
   mixR.gain(3, audioChannels[RIGHT]->_gain);
-  
   //info();
 }
 

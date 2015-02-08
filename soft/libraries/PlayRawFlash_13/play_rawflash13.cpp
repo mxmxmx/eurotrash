@@ -26,7 +26,7 @@
 
 // Modified to play from Serial Flash (c) Frank Bösing, 2014/12
 
-#include "play_rawflash15.h"
+#include "play_rawflash13.h"
 #include <arm_math.h>
 
 extern "C" {
@@ -589,7 +589,7 @@ void AudioPlaySerialFlash::setPositionMillis(const unsigned int millis)
 
 //set position in Bytes.
 //
-void AudioPlaySerialFlash::setPositionBytes(const unsigned int _n)
+void AudioPlaySerialFlash::setPositionSamples(const unsigned int _n)
 {
 	uint32_t n = _n;
 	int u = BytesConsumedPerUpdate();

@@ -11,8 +11,7 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*   - TD:
-*   - move raw to SPIFIFO
+*
 */
 
 #include <Audio.h>
@@ -23,6 +22,7 @@
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
 #include <play_rawflash15.h>
 #include <flash_spi.h>
+#include <SPIFIFO.h>
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
 #define BAUD 115200
@@ -88,7 +88,7 @@ struct audioChannel *audioChannels[CHANNELS];
 
 /* ----------------------- channel misc ------------------- */
 
-const uint8_t  FADE_IN  = 4;   // fade in  (adjust to your liking)
+const uint8_t  FADE_IN  = 3;    // fade in  (adjust to your liking)
 const uint16_t FADE_OUT = 100;  // fade out (ditto)
 
 uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
@@ -214,6 +214,9 @@ void setup() {
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
   /*  files on spi flash ? */
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
+  delay(20);
+  if (SPI_FLASH_STATUS) re_init_SPIFIFO();
+  delay(20);
   
   /* begin timers and HW serial */
   ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
@@ -223,17 +226,7 @@ void setup() {
   audioChannels[LEFT]  = (audioChannel*)malloc(sizeof(audioChannel));
   audioChannels[RIGHT] = (audioChannel*)malloc(sizeof(audioChannel));
   init_channels(INIT_FILE);
-  
-  /* set volume */
-  mixL.gain(0, audioChannels[LEFT]->_gain);
-  mixL.gain(1, audioChannels[LEFT]->_gain);
-  mixL.gain(2, audioChannels[LEFT]->_gain);
-  mixL.gain(3, audioChannels[LEFT]->_gain);
-  mixR.gain(0, audioChannels[RIGHT]->_gain);
-  mixR.gain(1, audioChannels[RIGHT]->_gain);
-  mixR.gain(2, audioChannels[RIGHT]->_gain);
-  mixR.gain(3, audioChannels[RIGHT]->_gain);
-  
+    
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);
   attachInterrupt(ENC_L1, left_encoder_ISR, CHANGE);
@@ -249,6 +242,17 @@ void setup() {
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
+ 
+    /* set volume */
+  mixL.gain(0, audioChannels[LEFT]->_gain);
+  mixL.gain(1, audioChannels[LEFT]->_gain);
+  mixL.gain(2, audioChannels[LEFT]->_gain);
+  mixL.gain(3, audioChannels[LEFT]->_gain);
+  mixR.gain(0, audioChannels[RIGHT]->_gain);
+  mixR.gain(1, audioChannels[RIGHT]->_gain);
+  mixR.gain(2, audioChannels[RIGHT]->_gain);
+  mixR.gain(3, audioChannels[RIGHT]->_gain);
+  
   //info();
 }
 
@@ -258,7 +262,7 @@ void loop()
 {
   
   while(1) {
-  
+     
      leftright();
    
      if (!FADE_LEFT) eof_left();

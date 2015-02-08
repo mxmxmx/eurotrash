@@ -296,7 +296,8 @@ char makenice(char _n, uint8_t _ext) {
    
    char tmp = _n;   
    if (tmp == '.') _EXT = 1; 
-   if (tmp >= 'A' && tmp  <= 'Z' ) tmp = tmp + 'a' - 'A';
+   if (tmp >= '0' && tmp <= '9') tmp = tmp;
+   else if (tmp >= 'A' && tmp  <= 'Z' ) tmp = tmp + 'a' - 'A';
    else tmp = ' ';
    return tmp;
 }

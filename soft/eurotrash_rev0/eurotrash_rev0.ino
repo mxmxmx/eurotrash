@@ -11,7 +11,7 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*   - TD fix SPIFIFO for CS = 13
+*   - TD fix SPIFIFO for CS = 13, etc.
 */
 
 //#define REV1
@@ -23,9 +23,8 @@
 #include <EEPROM.h>
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
 #include <play_rawflash13.h>
-//#include <play_rawflash15.h>
 #include <flash_spi.h>
-#include <SPIFIFO.h>
+
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
 #define BAUD 115200
@@ -181,9 +180,9 @@ void setup() {
   
   /* audio API */
   AudioMemory(15);
-
   SPI.setMOSI(7);
   SPI.setSCK(14);
+  
   if (!(SD.begin(CS_SD))) {
     
     while (1) {
@@ -209,16 +208,12 @@ void setup() {
   
   /*  get wav from SD */
   generate_file_list();
-  /* ...and spi flash */
-  SPI_FLASH_STATUS = spi_flash_init();
-  /*  update spi flash ? */
-  if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
+  /* spi flash mode ? */
+  if (!digitalRead(BUTTON_R)) SPI_FLASH_STATUS = spi_flash(); 
   /*  files on spi flash ? */
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
-  delay(20);
+  /*  spififo hack...  */
   if (SPI_FLASH_STATUS) re_init_SPIFIFO();
-  delay(20);
-  
   /* begin timers and HW serial */
   ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
   UI_timer.begin(UItimerCallback, UI_RATE);
@@ -227,7 +222,7 @@ void setup() {
   audioChannels[LEFT]  = (audioChannel*)malloc(sizeof(audioChannel));
   audioChannels[RIGHT] = (audioChannel*)malloc(sizeof(audioChannel));
   init_channels(INIT_FILE);
-    
+  
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);
   attachInterrupt(ENC_L1, left_encoder_ISR, CHANGE);
@@ -240,7 +235,7 @@ void setup() {
   if (!digitalRead(BUTTON_L)) calibrate(); 
   else if (EEPROM.read(0x0)==0xFF) HALFSCALE = readMIDpoint();
   else HALFSCALE = pow(2,ADC_RES-1)-1;
-  
+   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
  
@@ -257,6 +252,8 @@ void setup() {
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */
+
+uint32_t wait = 0;
 
 void loop() 
 {

@@ -77,6 +77,7 @@ void AudioPlaySerialFlash::flashinit(void)
 	SPI.setSCK(13);
 #endif
 	SPIFIFO.begin(SERFLASH_CS, SPICLOCK_MAX);
+	//spisettings = SPISettings(SPICLOCK_MAX, MSBFIRST, SPI_MODE0);
 }
 
 inline void AudioPlaySerialFlash::readSerStart(const size_t position)
@@ -93,6 +94,7 @@ inline void AudioPlaySerialFlash::readSerStart(const size_t position)
 	Serial.printf("memoryType = %x\r\n",SPIFIFO.read());
 	Serial.printf("capacity = %x\r\n",SPIFIFO.read());
 #endif
+	//SPI.beginTransaction(spisettings);
 	SPIFIFO.write16((0xb00 | ((position>>16) & 0xff)), SPI_CONTINUE);//CMD_READ_HIGH_SPEED
 	SPIFIFO.write16( position, SPI_CONTINUE);
 	SPIFIFO.write(0,SPI_CONTINUE);
@@ -115,6 +117,7 @@ void AudioPlaySerialFlash::play(const unsigned int data)
 	beginning = data + 4;
 	len =__REV16(SPIFIFO.read());
 	temp = SPIFIFO.read();
+	//SPI.endTransaction();
 	len |= (temp & 0xff00) << 8;
 	playing = temp & 0x03;
 	b16 = (temp & 0x80) >> 7;	
@@ -293,6 +296,7 @@ else {
 	}
 	
 	}
+	//SPI.endTransaction();
 	transmit(block);
 	release(block);
 	//sample += 256>>p;
@@ -414,18 +418,23 @@ void AudioPlaySerialFlash::setPositionSamples(const unsigned int _samples)
 
 unsigned char AudioPlaySerialFlash::flash_status(void)
 {
+  //SPI.beginTransaction(spisettings);		
   unsigned char c = spififo_flash_read_status();
+  //SPI.endTransaction();
   return(c);
 }
 
 unsigned char AudioPlaySerialFlash::spififo_flash_read_status(void)
 {
+  //SPI.beginTransaction(spisettings);	
   unsigned char c;
   SPIFIFO.write(CMD_READ_STATUS_REG, SPI_CONTINUE);
   SPIFIFO.write(0x00);
   SPIFIFO.read();
   c = SPIFIFO.read();
+  //SPI.endTransaction();
   return(c);
+
 }
 
 
@@ -456,6 +465,7 @@ int address_to_page(int addr)
 //=====================================
 void AudioPlaySerialFlash::spififo_flash_read_id(unsigned char *idt)
 {
+  //SPI.beginTransaction(spisettings);	
   write_pause();
   
   SPIFIFO.write(CMD_READ_ID, SPI_CONTINUE);
@@ -466,12 +476,14 @@ void AudioPlaySerialFlash::spififo_flash_read_id(unsigned char *idt)
   }
   SPIFIFO.write(0x00);
   *idt++ = SPIFIFO.read();
+  //SPI.endTransaction();
 }
 
 //=====================================
 // Tbe Typ=13sec  Max=40sec
 void AudioPlaySerialFlash::spififo_flash_chip_erase(boolean wait)
 {
+  //SPI.beginTransaction(spisettings);	
   write_pause();
   SPIFIFO.write(CMD_WRITE_ENABLE);
   SPIFIFO.read();
@@ -480,6 +492,7 @@ void AudioPlaySerialFlash::spififo_flash_chip_erase(boolean wait)
   SPIFIFO.read();
   flash_wait_for_write = 1;
   if(wait)write_pause();
+  //SPI.endTransaction();
 }
 
 //=====================================
@@ -488,7 +501,7 @@ void AudioPlaySerialFlash::spififo_flash_chip_erase(boolean wait)
 void AudioPlaySerialFlash::spififo_flash_page_program(unsigned char *wp,int pn)
 {
    int address;
-
+   //SPI.beginTransaction(spisettings);
    write_pause(); 
   
    SPIFIFO.write(CMD_WRITE_ENABLE);
@@ -511,6 +524,7 @@ void AudioPlaySerialFlash::spififo_flash_page_program(unsigned char *wp,int pn)
    }
    SPIFIFO.write(*wp++);
    SPIFIFO.read();
+   //SPI.endTransaction();
    // Indicate that next I/O must wait for this write to finish
    flash_wait_for_write = 1;
 }
@@ -521,7 +535,7 @@ void AudioPlaySerialFlash::spififo_flash_read_pages(unsigned char *p, int pn, co
 { 
   int address;
   unsigned char *rp = p;
-  
+  //SPI.beginTransaction(spisettings);
   write_pause();
   SPIFIFO.write(CMD_READ_DATA, SPI_CONTINUE);
   SPIFIFO.read();
@@ -541,6 +555,7 @@ void AudioPlaySerialFlash::spififo_flash_read_pages(unsigned char *p, int pn, co
   }
    SPIFIFO.write(0x00); 
    SPIFIFO.read();
+   //SPI.endTransaction();
 }
 
 

@@ -16,23 +16,20 @@ uint8_t _EXT = false;
 
 #define _SPICLOCK_MAX ((SPI_CTAR_PBR(0) | SPI_CTAR_BR(0) | SPI_CTAR_DBR)) // F_BUS/2 MHz
 
-
 /*  ======================================== */
 
 void re_init_SPIFIFO(void) {
  
-        #ifdef REV1
 	SPIFIFO.begin(CS_MEM, _SPICLOCK_MAX); // SPIFIFO hack
-        #endif
-        
         uint16_t _pos = 0;
         while (_pos < RAW_FILECOUNT) {
    
-           CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/CTRL_RESOLUTION; // in bytes
-           raw1.play(RAW_FILE_ADR[_pos]); delay(15);  
-           CTRL_RES_EOF[MAXFILES +_pos] = raw1.lengthMillis() / CTRL_RESOLUTION; 
-           _pos++;         
-    }
+               CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/CTRL_RESOLUTION; // in bytes
+               raw1.play(RAW_FILE_ADR[_pos]); delay(15);  
+               CTRL_RES_EOF[MAXFILES +_pos] = raw1.lengthMillis() / CTRL_RESOLUTION; 
+              _pos++;   
+              Serial.println(_pos);      
+        }
 }
 
 /*  ======================================== */
@@ -41,7 +38,7 @@ uint8_t spi_flash_init() {
  
   unsigned char id_tab[32];
   int flashstatus;
-  flash_init_CS(CS_MEM);
+  
   flashstatus = flash_read_status();
   flash_read_id(id_tab);
   Serial.printf("Flash Status: 0x%X, ID:0x%X,0x%X,0x%X,0x%X ", flashstatus , id_tab[0], id_tab[1], id_tab[2], id_tab[3]);   
@@ -74,6 +71,9 @@ void info() {
 
 uint8_t spi_flash(){
   
+    SPI_FLASH_STATUS = spi_flash_init();
+    if (!SPI_FLASH_STATUS) return 0x0;
+    
     MENU_PAGE[LEFT]  = FLASH;
     MENU_PAGE[RIGHT] = FLASH;
     
@@ -104,8 +104,8 @@ uint8_t spi_flash(){
                    
                          _files = flash(_files);   
                          delay(1500);
-                        _files = verify(_files); 
-                        if (_files)  { 
+                         _files = verify(_files); 
+                         if (_files)  { 
                                     update_display(LEFT, FLASH_OK);
                                     update_display(RIGHT, FCNT);
                         }
@@ -125,7 +125,7 @@ uint8_t spi_flash(){
     }      
     delay(1000);
     MENU_PAGE[LEFT]  = FILESELECT; 
-    MENU_PAGE[RIGHT] = FILESELECT; 
+    MENU_PAGE[RIGHT] = FILESELECT;
     LASTBUTTON = millis(); 
     return _files;
 }

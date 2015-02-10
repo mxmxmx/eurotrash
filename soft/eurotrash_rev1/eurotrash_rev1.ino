@@ -11,7 +11,8 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*   - TD fix SPIFIFO for CS = 13
+*   - TD: fix SPIFIFO for CS = 13
+*   - TD: make pos 0 / flash work nice for 8 bit
 */
 
 #define REV1

@@ -12,6 +12,8 @@ compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.htm
 - 2x digital outputs (10V) (end-of-file trigger)
 - 4x CV inputs: 12 bit (+/- 5V) (start pos / end pos)
 - 2x digital inputs (clock left/right)
+- SD card
+- 16 MB serial flash (optional, for low(er) latency sample triggering)
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 

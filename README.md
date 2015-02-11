@@ -17,4 +17,9 @@ compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.htm
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 
+FAQ:
+
+Q:  uh, nice but i hate displays and why SMD?
+A:  so that we know which file we will be playing? ... and oh, because it's 2015. taking advantage of i2s implies using audio DACs implies SMD.
+
 ![My image](https://farm8.staticflickr.com/7556/15847752621_464320a658_b.jpg)

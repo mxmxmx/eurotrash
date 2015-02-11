@@ -17,7 +17,7 @@ compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.htm
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 
-- FAQ:
+FAQ:
 
 - Q:  uh, nice but i hate displays and why SMD?
 

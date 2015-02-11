@@ -1,7 +1,7 @@
 eurotrash
 =========
 
-an actual, as it were, 16bit/44.1kHz eurorack stereo/dual mono wav player:
+an actual, as it were, 16bit/44.1kHz DIY eurorack stereo/dual mono wav player:
 
 teensy 3.1 + pcm5102a DAC; atmega328 + 128x32 oled
 

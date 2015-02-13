@@ -7,7 +7,7 @@
 - 100R :         4x 
 - 220R :         2x 
 - 470R : 	 2x  [510R will do, too]
-- 510R :         10x [these values are not critical, you could just get a bunch 220R and use them wherever it says 500R]
+- 510R :         10x [these values are not critical, you could just get a bunch 220R or 470R and use them wherever it says 510R]
 - 1k :           4x
 - 10k :          4x
 - 20k :          2x
@@ -45,13 +45,15 @@ ICs/semis:
 - PCM5102a (TSSOP) : 1x (mouser # 595-PCM5102APWR)
 
 
-voltage regulators:
+voltage regulators/references:
 
 - ADP150 (3v3 regulator, TSOT): 1x (mouser # 584-ADP150AUJZ-3.3R7)
 - LM1117-33 (3v3 LDO reg., SOT-223): 1x (mouser # 511-LD1117S33)
 - LM1117-50 (5v0 LDO reg., SOT-223): 1x (mouser # 511-LD1117S50)
-- **79L05** -5v (TO-92): 1x (**better choice would be: LM4040-5** + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
 
+- REV0: **79L05** -5v (TO-92): 1x (**better choice would be: LM4040-5** + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
+- REV1: LM4040-5 (TO-92): 1x
+- REV1: LM4040-3 (sot-23): 1x (NB this is optional: can be used for AREF; not really needed for the wav player)
 
 misc:
 

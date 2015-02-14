@@ -21,7 +21,7 @@ FAQ:
 
 - Q:  uh, nice but i hate displays and why SMD?
 
-- A:  so that we know which file we will be playing? ... and well. because 
+- A:  so that we know which file we will be playing? ... and well, because. 
 
 
 ![My image](https://farm8.staticflickr.com/7556/15847752621_464320a658_b.jpg)

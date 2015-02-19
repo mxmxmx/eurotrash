@@ -11,9 +11,14 @@
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
+<<<<<<< HEAD
 *   - TD fix SPIFIFO for CS = 13
 *   - what's going on with? AudioPlaySerialFlash::seek(), ie when using very short samples??
 *   - stop playing when changing banks
+=======
+*   - TD: fix SPIFIFO for CS = 13
+*   - TD: make pos 0 / flash work nice for 8 bit
+>>>>>>> FETCH_HEAD
 */
 
 #define REV1

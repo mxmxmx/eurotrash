@@ -6,8 +6,8 @@
 
 - 100R :         4x 
 - 220R :         2x 
-- 470R : 	 2x  [510R will do, too]
-- 510R :         10x [these values are not critical, you could just get a bunch 220R and use them wherever it says 500R]
+- 470R : 	 2x  
+- 510R :         10x (these values are not critical, you could just get a bunch 220R or 470R and use them wherever it says 510R)
 - 1k :           4x
 - 10k :          4x
 - 20k :          2x
@@ -45,13 +45,15 @@ ICs/semis:
 - PCM5102a (TSSOP) : 1x (mouser # 595-PCM5102APWR)
 
 
-voltage regulators:
+voltage regulators/references:
 
 - ADP150 (3v3 regulator, TSOT): 1x (mouser # 584-ADP150AUJZ-3.3R7)
 - LM1117-33 (3v3 LDO reg., SOT-223): 1x (mouser # 511-LD1117S33)
 - LM1117-50 (5v0 LDO reg., SOT-223): 1x (mouser # 511-LD1117S50)
-- **79L05** -5v (TO-92): 1x (**better choice would be: LM4040-5** + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
 
+- REV0: **79L05** -5v (TO-92): 1x (**better choice would be: LM4040-5** + 500R (0805)) (****) (mouser # 926-LM4040DIZ50NOPB)
+- REV1: LM4040-5 (TO-92): 1x
+- REV1: LM4040-3 (sot-23): 1x (NB this is optional: can be used for AREF; not really needed for the wav player)
 
 misc:
 
@@ -76,11 +78,9 @@ notes:
 the other is used for the digital outputs). 
 i've tried both _OPA1662 and AD8599_ in the audio path - not sure whether i'd notice the difference, YMMV.
      
-(**) the spi flash is entirely optional; i put it there as the pjrc audio adapter has one, too. it's currently not supported, neither by the eurotrash firmware nor by the audio libary, so at this point, i'd say, don't bother. there's also the question whether it'll be 100% compatible with future updates of the library (that said, it works in principle. i got mine from alibaba. if you'd like to, also get 3x 100R more (0805) (in the unlikely event you got these in multiples of 1)). 
+(**) the spi flash is optional; it's a very nice add-on though, as it allows for lower-latency one-shot triggering compared to streaming from SD card (~4ms vs ~8ms). the winbond ICs are a bit hard to find, i got mine from alibaba. when using it, you'll also need 3x 100R more (0805) (in the unlikely event you got these in multiples of 1)). (there's pin/software compatible alternative ICs at mouser and the usual places, which should work, but they're not confirmed working atm); 
 
-(***) you can solder the oled directly to the board (with the pin header) — which evidently isn't ideal; the better way is to
-put the *socket* onto the oled and use headers like these http://www.taydaelectronics.com/stackable-header-8-pins-2-54mm.html , 
-pushing them from up from the bottom of the board. for the socket, something like BKL Electronic 10120828 will be suitable. also see build doc.
+(***) you can solder the oled directly to the board (with the pin header) — which evidently isn't ideal; one way around this is to put the *socket* onto the oled and use headers like these http://www.taydaelectronics.com/stackable-header-8-pins-2-54mm.html ,  pushing them from up from the bottom of the board. for the socket, something like BKL Electronic 10120828 will be suitable. also see build doc. 
 
-(****) using a 79L05 is ok, but using a LM4040-5 will result in somewhat better ADC performance/is recommended. (see build instructions). 
+(****) using a 79L05 is entirely ok, but using a LM4040-5 will result in somewhat better ADC performance. (see build instructions). 
 

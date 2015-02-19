@@ -12,6 +12,8 @@
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
 *   - TD fix SPIFIFO for CS = 13
+*   - what's going on with? AudioPlaySerialFlash::seek(), ie when using very short samples??
+*   - stop playing when changing banks
 */
 
 #define REV1
@@ -89,8 +91,10 @@ struct audioChannel *audioChannels[CHANNELS];
 
 /* ----------------------- channel misc ------------------- */
 
-const uint8_t  FADE_IN  = 3;    // fade in  (adjust to your liking)
-const uint16_t FADE_OUT = 100;  // fade out (ditto)
+const uint8_t  FADE_IN  = 3;       // fade in  (adjust to your liking)
+const uint16_t FADE_OUT = 100;     // fade out (ditto)
+const uint8_t  FADE_IN_RAW  = 1;   // fade in  / flash
+const uint16_t FADE_OUT_RAW = 70;  // fade out / flash
 
 uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
@@ -260,7 +264,7 @@ void loop()
 {
   
   while(1) {
-     
+  
      leftright();
    
      if (!FADE_LEFT) eof_left();

@@ -66,20 +66,23 @@ void _play(struct audioChannel* _channel) {
       _startPos *= _channel->ctrl_res;                // scale => bytes
        
        if (_bank) {
-            fade[_numVoice+0x4]->fadeIn(1);
-            const unsigned int f_adr = RAW_FILE_ADR[_file];    
-            raw[_numVoice]->play(f_adr);    
-            raw[_numVoice]->setPositionSamples(_startPos);  
+            fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
+            const unsigned int f_adr = RAW_FILE_ADR[_file]; 
+            raw[_numVoice]->seek(f_adr, _startPos);     
+            //raw[_numVoice]->play(f_adr);    
+            //raw[_numVoice]->setPositionSamples(_startPos);  
+             /*  swap file and fade out previous file: */
+            _swap = ~_swap & 1u;
+            fade[_swap + _id*CHANNELS + 0x4]->fadeOut(FADE_OUT_RAW); // ?
        }
        else { 
              fade[_numVoice]->fadeIn(FADE_IN);
              String playthis = FILES[_file];  
              wav[_numVoice]->seek(&playthis[0], _startPos>>9); 
+              /*  swap file and fade out previous file: */
+             _swap = ~_swap & 1u;
+             fade[_swap + _id*CHANNELS]->fadeOut(FADE_OUT);
        }     
-       
-       /*  swap file and fade out previous file: */
-        _swap = ~_swap & 1u;
-        fade[_swap + _id*CHANNELS]->fadeOut(FADE_OUT);
         _channel->swap = _swap;
        /*  update channel data: */
         _channel->ctrl_res = CTRL_RES[_file + _bank*MAXFILES];

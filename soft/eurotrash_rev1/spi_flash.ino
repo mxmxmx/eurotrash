@@ -24,7 +24,7 @@ void re_init_SPIFIFO(void) {
         uint16_t _pos = 0;
         while (_pos < RAW_FILECOUNT) {
    
-           CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/CTRL_RESOLUTION; // in bytes
+           CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/(CTRL_RESOLUTION*2); // in bytes, make this go half way only
            raw1.play(RAW_FILE_ADR[_pos]); delay(15);  
            CTRL_RES_EOF[MAXFILES +_pos] = raw1.lengthMillis() / CTRL_RESOLUTION; 
            _pos++;         

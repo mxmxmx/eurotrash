@@ -12,7 +12,6 @@
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
 *   - TD fix SPIFIFO for CS = 13
-*   - stop playing when changing banks
 */
 
 #define REV1 
@@ -166,8 +165,7 @@ void ADCtimerCallback() { _ADC = true; }
 
 void setup() {
  
-  while (!Serial) {;}  
-  delay(100); 
+  //while (!Serial) {;}  
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
   analogReadAveraging(4);   
@@ -213,13 +211,12 @@ void setup() {
   /*  get wav from SD */
   generate_file_list();
   /* ...and spi flash */
-  
   if (SPI_FLASH) SPI_FLASH_STATUS = spi_flash_init();
   /*  update spi flash ? */
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
   /*  files on spi flash ? */
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
-  /*  spififo hack...  */
+  /*  file names */
   if (SPI_FLASH_STATUS) generate_file_list_flash();
 
   /* begin timers and HW serial */

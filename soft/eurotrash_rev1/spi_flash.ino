@@ -16,17 +16,15 @@ uint8_t _EXT = false;
 
 /*  ======================================== */
 
-void re_init_SPIFIFO(void) {
+void generate_file_list_flash(void) {
  
-        #ifdef REV1
-	//SPIFIFO.begin(CS_MEM, _SPICLOCK_MAX); // SPIFIFO hack
-        #endif
         uint16_t _pos = 0;
         while (_pos < RAW_FILECOUNT) {
    
-           CTRL_RES[MAXFILES + _pos]   = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/(CTRL_RESOLUTION*2); // in bytes, make this go half way only
-           raw1.play(RAW_FILE_ADR[_pos]); delay(15);  
-           CTRL_RES_EOF[MAXFILES +_pos] = raw1.lengthMillis() / CTRL_RESOLUTION; 
+           CTRL_RES[MAXFILES + _pos] = (RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos])/(CTRL_RESOLUTION); // in bytes
+           raw1.play(RAW_FILE_ADR[_pos]); 
+           delay(15);  
+           CTRL_RES_EOF[MAXFILES +_pos] = (float)raw1.lengthMillis() / (float)CTRL_RESOLUTION; 
            _pos++;         
     }
 }

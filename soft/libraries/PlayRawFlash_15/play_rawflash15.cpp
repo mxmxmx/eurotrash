@@ -126,6 +126,33 @@ void AudioPlaySerialFlash::play(const unsigned int data)
 	//Serial.printf("len:0x%x Mode: 0x%x\r\n", len, playing);
 }
 
+void AudioPlaySerialFlash::seek(const unsigned int data, const unsigned int _pos)
+{
+	int temp, _p, 
+	stop();
+	AudioStartUsingSPI();
+	__disable_irq();
+	readSerStart(data);
+	SPIFIFO.write16(0x00,SPI_CONTINUE);
+	SPIFIFO.write16(0x00);
+	prior = 0;
+	beginning = data + 4;
+	len =__REV16(SPIFIFO.read());
+	temp = SPIFIFO.read();
+	//SPI.endTransaction();
+	len |= (temp & 0xff00) << 8;
+	playing = temp & 0x03;
+	b16 = (temp & 0x80) >> 7;	
+	
+	if (playing == 0x01)      _p = 7; 
+	else if (playing == 0x02) _p = 6; 
+    else sample = _p = 5; 
+    sample = (_pos<<_p) < len ? (_pos<<_p) : ((len>>_p)<<_p);
+	len -= sample;
+	__enable_irq();
+	Serial.printf("len:%d pos: %d\r\n", len, _pos);
+}
+
 void AudioPlaySerialFlash::update(void)
 {
 	audio_block_t *block;
@@ -407,6 +434,7 @@ void AudioPlaySerialFlash::setPositionSamples(const unsigned int _samples)
 {
 	int u = SamplesConsumedPerUpdate();
 	uint32_t n = _samples;	
+	n = u < 0x7F ? (n >> 1) : n;
 	n = n & ~(u-1);
 	if (n >= len - u ) stop();
 	else {

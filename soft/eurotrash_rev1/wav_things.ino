@@ -61,11 +61,11 @@ void _play(struct audioChannel* _channel) {
       _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
       _startPos += _channel->pos0;                    // manual offset  
       _startPos = _startPos < 0 ?  0 : _startPos;     // limit  
-      _startPos = _startPos < CTRL_RESOLUTION ? _startPos : (CTRL_RESOLUTION - 0x1);
-      _channel->srt = _startPos;                      // remember start pos  
-      _startPos *= _channel->ctrl_res;                // scale => bytes
+      _startPos = _startPos < CTRL_RESOLUTION ? _startPos : (CTRL_RESOLUTION - 0x1);                       
+      //_startPos *= _channel->ctrl_res;                // scale => bytes
        
        if (_bank) {
+            _channel->srt = 0;  
             fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
             const unsigned int f_adr = RAW_FILE_ADR[_file]; 
             raw[_numVoice]->seek(f_adr, _startPos);     
@@ -74,6 +74,8 @@ void _play(struct audioChannel* _channel) {
             fade[_swap + _id*CHANNELS + 0x4]->fadeOut(FADE_OUT_RAW); // ?
        }
        else { 
+             _channel->srt = _startPos;                       // remember start pos  
+              _startPos *= _channel->ctrl_res;                // scale => bytes
              fade[_numVoice]->fadeIn(FADE_IN);
              const char *playthis = FILES[_file];  
              wav[_numVoice]->seek(playthis, _startPos>>9); 

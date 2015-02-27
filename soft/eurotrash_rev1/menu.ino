@@ -28,8 +28,6 @@ uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
 const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
 int16_t prev_encoderdata[]  = {-999, -999};
 
-const char *leftdisplay  = "      0"; 
-const char *rightdisplay = "      0"; 
 uint8_t MENU_PAGE[CHANNELS] = {0,0};
 uint8_t filedisplay[CHANNELS];
 
@@ -140,9 +138,13 @@ void process_buttons() {
         else if (EVENT_B[_button] == HOLD) {
           // switch banks ?
           if (SPI_FLASH_STATUS) { 
-                uint8_t _bank = audioChannels[_button]->bank;
-                audioChannels[_button]->bank = ~_bank & 1u;
+                uint16_t _bank = audioChannels[_button]->bank;
+                uint16_t _xxx  = _bank*0x04 + CHANNELS*audioChannels[_button]->id;
+                // fade out channel
+                fade[_xxx]->fadeOut(FADE_OUT);
+                fade[_xxx+0x01]->fadeOut(FADE_OUT);
                 // update
+                audioChannels[_button]->bank = ~_bank & 1u;
                 uint16_t _file = 0x0;
                 audioChannels[_button]->file_wav = _file; 
                 MENU_PAGE[_button] = FILESELECT;
@@ -320,7 +322,6 @@ void update_display(uint8_t _channel, uint16_t _newval) {
  
  // send to atmega 
  cmd += _channel;
- Serial.println(msg);
  HWSERIAL.print(cmd);
  HWSERIAL.print(msg);
 }

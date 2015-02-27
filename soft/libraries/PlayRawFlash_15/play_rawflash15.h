@@ -48,7 +48,7 @@ class AudioPlaySerialFlash : public AudioStream
 public:
 	AudioPlaySerialFlash(void) : AudioStream(0, NULL), playing(0) { flashinit(); }
 	void play(const unsigned int data);
-	//void loop(const unsigned int data);
+	void seek(const unsigned int data, const unsigned int _pos);
 	void stop(void);
 	bool isPlaying(void);
 	bool pause(bool _paused);

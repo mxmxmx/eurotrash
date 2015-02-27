@@ -8,11 +8,12 @@
 uint8_t FILECOUNT;
 uint8_t RAW_FILECOUNT;
 const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
+const uint8_t NAME_LEN = 13;         // 8.3
 /* misc arrays */
-String FILES[MAXFILES];              // file name, SD
-uint32_t RAW_FILE_ADR[MAXFILES+0x1]; // file adr, SPI
-String DISPLAYFILES[MAXFILES];       // display for SD
-String RAW_DISPLAYFILES[MAXFILES];   // display for spi flash
+char FILES[MAXFILES][NAME_LEN];              // file name, SD
+uint32_t RAW_FILE_ADR[MAXFILES+0x1];   // file adr, SPI
+char DISPLAYFILES[MAXFILES][NAME_LEN];       // display for SD
+char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];   // display for spi flash
 
 uint32_t CTRL_RES[MAXFILES*CHANNELS];
 uint32_t CTRL_RES_EOF[MAXFILES*CHANNELS];
@@ -27,22 +28,22 @@ uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
 const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
 int16_t prev_encoderdata[]  = {-999, -999};
 
-String leftdisplay  = "      0"; 
-String rightdisplay = "      0"; 
+const char *leftdisplay  = "      0"; 
+const char *rightdisplay = "      0"; 
 uint8_t MENU_PAGE[CHANNELS] = {0,0};
 uint8_t filedisplay[CHANNELS];
 
 // misc messages 
-String _SAVE = "    save?";
-String _OK   = "       OK";
-String _FLASH_OK       = " FLASH OK";
-String _FLASH_NOT_OK   = "    ERROR";
-String _FCNT           = " FILES OK";
-String _ALLGOOD        = "     A-OK";
-String _DOT            = "         ";
-String _SD_ERROR       = " SD EMPTY";
-String _ERASE          = "... ERASE";
-String _FLASHING       = " FLASHING";
+const char *_SAVE = "    save?";
+const char *_OK   = "       OK";
+const char *_FLASH_OK       = " FLASH OK";
+const char *_FLASH_NOT_OK   = "    ERROR";
+const char *_FCNT           = " FILES OK";
+const char *_ALLGOOD        = "     A-OK";
+const char *_DOT            = "         ";
+const char *_SD_ERROR       = " SD EMPTY";
+const char *_ERASE          = "... ERASE";
+const char *_FLASHING       = " FLASHING";
 
 /* menu pages */
 enum { 
@@ -236,7 +237,7 @@ String makedisplay(int16_t number) {
 
 void update_display(uint8_t _channel, uint16_t _newval) {
   
- String msg;
+ char msg[DISPLAY_LEN+1];
  int16_t tmp = _newval;
  uint8_t _bank = audioChannels[_channel]->bank;
  char cmd = 0x02;      // this is the cmd byte / prefix for the Serial messages (ascii starting at 0x02).
@@ -254,10 +255,11 @@ void update_display(uint8_t _channel, uint16_t _newval) {
                 tmp = 0; encoder[_channel].setPos(0); 
              }
            else DIR = true;
+           
            if (tmp > max_f) tmp = max_f;
            
-           if (_bank == _FLASH) msg = RAW_DISPLAYFILES[tmp]; 
-           else msg = DISPLAYFILES[tmp];
+           if (_bank == _FLASH) memcpy(msg, RAW_DISPLAYFILES[tmp], DISPLAY_LEN+1); 
+           else memcpy(msg, DISPLAYFILES[tmp], DISPLAY_LEN+1);
            
            if (tmp == audioChannels[_channel]->file_wav) msg[0] = '\xb7';
            filedisplay[_channel] = tmp;  
@@ -268,7 +270,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
             if (tmp < 0) { tmp = 0; encoder[_channel].setPos(0x0); }
             else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
             audioChannels[_channel]->pos0 = tmp;
-            msg = makedisplay(tmp);
+            memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
             cmd +=0x02;
             break;
           
@@ -277,15 +279,15 @@ void update_display(uint8_t _channel, uint16_t _newval) {
            if (tmp < 1)  { tmp = 1; encoder[_channel].setPos(0x1); }
            else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
            audioChannels[_channel]->posX = tmp;
-           msg = makedisplay(tmp);
+           memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
            cmd +=0x04;
            break;
      }  
      
      case CALIBRATE: {
-           if (!_channel) msg = makedisplay(tmp); // left = display ADC
-           else if (_channel && _newval > 0) msg = _SAVE;
-           else msg = _OK;
+           if (!_channel) memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1); // left = display ADC
+           else if (_channel && _newval > 0) memcpy(msg, _SAVE, DISPLAY_LEN);
+           else memcpy(msg, _OK, DISPLAY_LEN);
            break;
         
      }
@@ -294,20 +296,20 @@ void update_display(uint8_t _channel, uint16_t _newval) {
           
            if (!_channel) {           
                switch (_newval) {                     
-                       case FLASH_OK:     { msg = _FLASH_OK;     break; }
-                       case FLASH_NOT_OK: { msg = _FLASH_NOT_OK; break; }
-                       case ALLGOOD:      { msg = _ALLGOOD;      break; }
-                       case SD_ERROR:     { msg = _SD_ERROR;     break; }
-                       case ERASE:        { msg = _ERASE;        break; }
-                       case FLASHING:     { msg = _FLASHING;     break; }
+                       case FLASH_OK:     { memcpy(msg, _FLASH_OK, DISPLAY_LEN);     break; }
+                       case FLASH_NOT_OK: { memcpy(msg, _FLASH_NOT_OK, DISPLAY_LEN); break; }
+                       case ALLGOOD:      { memcpy(msg, _ALLGOOD,  DISPLAY_LEN);     break; }
+                       case SD_ERROR:     { memcpy(msg, _SD_ERROR, DISPLAY_LEN);     break; }
+                       case ERASE:        { memcpy(msg, _ERASE,  DISPLAY_LEN);       break; }
+                       case FLASHING:     { memcpy(msg, _FLASHING, DISPLAY_LEN);     break; }
                        default: break;
                }            
                break;
           }
           else  { 
               switch (_newval) {       
-                      case FCNT:           { msg = _FCNT;    break; }
-                      case ALLGOOD:        { msg = _DOT;     break; }
+                      case FCNT:           { memcpy(msg, _FCNT, DISPLAY_LEN);   break; }
+                      case ALLGOOD:        { memcpy(msg, _DOT,  DISPLAY_LEN);   break; }
                       default: break;
               }
               break;
@@ -318,7 +320,9 @@ void update_display(uint8_t _channel, uint16_t _newval) {
  
  // send to atmega 
  cmd += _channel;
- HWSERIAL.print(cmd + msg);
+ Serial.println(msg);
+ HWSERIAL.print(cmd);
+ HWSERIAL.print(msg);
 }
 
 /* --------------------------------------------------------------- */

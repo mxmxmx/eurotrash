@@ -69,16 +69,14 @@ void _play(struct audioChannel* _channel) {
             fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
             const unsigned int f_adr = RAW_FILE_ADR[_file]; 
             raw[_numVoice]->seek(f_adr, _startPos);     
-            //raw[_numVoice]->play(f_adr);    
-            //raw[_numVoice]->setPositionSamples(_startPos);  
              /*  swap file and fade out previous file: */
             _swap = ~_swap & 1u;
             fade[_swap + _id*CHANNELS + 0x4]->fadeOut(FADE_OUT_RAW); // ?
        }
        else { 
              fade[_numVoice]->fadeIn(FADE_IN);
-             String playthis = FILES[_file];  
-             wav[_numVoice]->seek(&playthis[0], _startPos>>9); 
+             const char *playthis = FILES[_file];  
+             wav[_numVoice]->seek(playthis, _startPos>>9); 
               /*  swap file and fade out previous file: */
              _swap = ~_swap & 1u;
              fade[_swap + _id*CHANNELS]->fadeOut(FADE_OUT);
@@ -146,9 +144,8 @@ void generate_file_list() {  // to do - sort alphabetically?
               if  (!strcmp(&_name[len-2], "~1.WAV")) delay(2); // skip crap
               else if  (_name[0] == '_') delay(2);             // skip crap
               else if (!strcmp(&_name[len], ".WAV")) {
-                      
-                      FILES[FILECOUNT] = _name;
-                      //file_len  = thisfile.size() - 0x2e; // size minus header [ish]
+    
+                      memcpy(FILES[FILECOUNT], _name, NAME_LEN);
                       /* this is annoying */
                       wav1.play(_name);
                       delay(15);
@@ -169,7 +166,7 @@ void generate_file_list() {  // to do - sort alphabetically?
                           justify--;
                           tmp[justify] = ' '; 
                       }
-                      DISPLAYFILES[FILECOUNT] = tmp;
+                      memcpy(DISPLAYFILES[FILECOUNT], tmp, sizeof(tmp));
                       FILECOUNT++;
               }    
              thisfile.close();

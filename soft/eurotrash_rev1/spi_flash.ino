@@ -371,7 +371,7 @@ void parse_INFO_PAGES(uint8_t *fileinfo, uint8_t _files) {
                fileinfo++;  
          };  
          right_justify(_name);
-         RAW_DISPLAYFILES[_files-_f] = _name;
+         memcpy(RAW_DISPLAYFILES[_files-_f], _name, sizeof(_name));
          Serial.printf(" -- > RAW_FILE_ADR[%d] = 0x%07X ......\r\n", _files - _f, adr);
         _f--;
      }

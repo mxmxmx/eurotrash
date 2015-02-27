@@ -12,7 +12,6 @@
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
 *   - TD fix SPIFIFO for CS = 13
-*   - fine-tune AudioPlaySerialFlash::seek()
 *   - stop playing when changing banks
 */
 
@@ -264,7 +263,7 @@ void loop()
 {
   
   while(1) {
-  
+
      leftright();
    
      if (!FADE_LEFT) eof_left();

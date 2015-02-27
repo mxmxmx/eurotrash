@@ -25,7 +25,8 @@ void generate_file_list_flash(void) {
            raw1.play(RAW_FILE_ADR[_pos]); 
            delay(15);  
            CTRL_RES_EOF[MAXFILES +_pos] = (float)raw1.lengthMillis() / (float)CTRL_RESOLUTION; 
-           _pos++;         
+           _pos++;     
+           raw1.stop();    
     }
 }
 

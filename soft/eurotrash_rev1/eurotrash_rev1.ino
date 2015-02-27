@@ -12,7 +12,6 @@
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
 *   - TD fix SPIFIFO for CS = 13
-*   - stop playing when changing banks
 */
 
 #define REV1 
@@ -129,7 +128,7 @@ uint8_t SPI_FLASH_STATUS = 0;
 #else
   #define CS_MEM 13   // rev0
   #define BUTTON_R 15 // rev0
-  #define SPI_FLASH 0 // rev1
+  #define SPI_FLASH 0 // rev0
 #endif
 
 /* CV inputs */
@@ -166,7 +165,7 @@ void ADCtimerCallback() { _ADC = true; }
 
 void setup() {
  
-  while (!Serial) {;}  
+  //while (!Serial) {;}  
   delay(100); 
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
@@ -212,14 +211,13 @@ void setup() {
   
   /*  get wav from SD */
   generate_file_list();
-  /* ...and spi flash */
-  
+  /* and spi flash */
   if (SPI_FLASH) SPI_FLASH_STATUS = spi_flash_init();
   /*  update spi flash ? */
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
   /*  files on spi flash ? */
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
-  /*  spififo hack...  */
+  /*  file names */
   if (SPI_FLASH_STATUS) generate_file_list_flash();
 
   /* begin timers and HW serial */
@@ -257,7 +255,7 @@ void setup() {
   mixR.gain(1, audioChannels[RIGHT]->_gain);
   mixR.gain(2, audioChannels[RIGHT]->_gain);
   mixR.gain(3, audioChannels[RIGHT]->_gain);
-  info();
+  //info();
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */

@@ -166,10 +166,7 @@ void ADCtimerCallback() { _ADC = true; }
 void setup() {
  
   //while (!Serial) {;}  
-<<<<<<< HEAD
   delay(100); 
-=======
->>>>>>> FETCH_HEAD
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
   analogReadAveraging(4);   
@@ -214,11 +211,7 @@ void setup() {
   
   /*  get wav from SD */
   generate_file_list();
-<<<<<<< HEAD
   /* and spi flash */
-=======
-  /* ...and spi flash */
->>>>>>> FETCH_HEAD
   if (SPI_FLASH) SPI_FLASH_STATUS = spi_flash_init();
   /*  update spi flash ? */
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 

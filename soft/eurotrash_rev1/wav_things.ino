@@ -152,9 +152,9 @@ void generate_file_list() {  // to do - sort alphabetically?
                       delay(15);
                       file_len = (float)wav1.lengthBytes() * 0.9f;
              
-                      CTRL_RES[FILECOUNT]  = file_len / CTRL_RESOLUTION;       // ctrl resolution pos0/bytes
+                      CTRL_RES[FILECOUNT]  = file_len * CTRL_RESOLUTION_INV;       // ctrl resolution pos0/bytes
                       file_len_ms = wav1.lengthMillis();
-                      CTRL_RES_EOF[FILECOUNT] = file_len_ms / CTRL_RESOLUTION; // ctrl resolution posX/bytes
+                      CTRL_RES_EOF[FILECOUNT] = file_len_ms * CTRL_RESOLUTION_INV; // ctrl resolution posX/bytes
                       wav1.stop();
                       /* for the display, get rid of .wav extension + right justify */
                       int8_t justify = DISPLAY_LEN - len;
@@ -192,7 +192,7 @@ void update_eof(uint8_t _channel) {
        
        _srt =  audioChannels[_channel]->srt;          
        _srt = (CTRL_RESOLUTION - _srt) * audioChannels[_channel]->ctrl_res_eof ; // = effective length in ms  
-       _end = _srt / CTRL_RESOLUTION * _end;
+       _end = _srt * CTRL_RESOLUTION_INV * _end;
        audioChannels[_channel]->eof = _end > 0 ? _end : 0x01;
     }
 }  

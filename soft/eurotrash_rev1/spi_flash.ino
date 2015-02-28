@@ -27,8 +27,8 @@ void generate_file_list_flash(void) {
            len = RAW_FILE_ADR[_pos+1] - RAW_FILE_ADR[_pos];   // file length (bytes)
            frames = 2*raw1.SamplesConsumedPerUpdate();        // file length (frames)
            len = len / frames;
-           CTRL_RES[MAXFILES + _pos] = len/(float)CTRL_RESOLUTION + 0x01; // ctrl res in frames
-           CTRL_RES_EOF[MAXFILES +_pos] = (float)raw1.lengthMillis() / (float)CTRL_RESOLUTION; 
+           CTRL_RES[MAXFILES + _pos] = len * CTRL_RESOLUTION_INV + 0x01; // ctrl res in frames
+           CTRL_RES_EOF[MAXFILES +_pos] = (float)raw1.lengthMillis() * CTRL_RESOLUTION_INV; 
            _pos++;     
            raw1.stop();    
     }

@@ -59,6 +59,7 @@ public:
 //	void setPosition(const unsigned int n);
 	void setPositionMillis(const unsigned int millis);
 	void setPositionSamples(const unsigned int _samples);
+	int SamplesConsumedPerUpdate(void);
 	unsigned char flash_status(void);
 	void spififo_flash_read_id(unsigned char *idt);
 	void spififo_flash_chip_erase(boolean wait);
@@ -82,7 +83,6 @@ private:
 	inline uint32_t b2m(void) __attribute__((always_inline));
 	inline uint32_t calcMillis(uint32_t position) __attribute__((always_inline));
 	void write_pause(void);
-	int SamplesConsumedPerUpdate(void);
 };
 
 #endif

@@ -164,9 +164,8 @@ void ADCtimerCallback() { _ADC = true; }
 /* ------------------------------------------------------ */
 
 void setup() {
- 
+  
   //while (!Serial) {;}  
-  delay(100); 
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
   analogReadAveraging(4);   
@@ -180,7 +179,10 @@ void setup() {
   pinMode(EOF_R, OUTPUT);  
   digitalWrite(EOF_L, LOW);
   digitalWrite(EOF_R, LOW);
-  
+  #ifndef REV1
+      pinMode(CS_MEM, OUTPUT);    
+      digitalWriteFast(CS_MEM, HIGH);
+  #endif    
   /* audio API */
   AudioMemory(15);
   SPI.setMOSI(7);
@@ -219,7 +221,7 @@ void setup() {
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
   /*  file names */
   if (SPI_FLASH_STATUS) generate_file_list_flash();
-
+  
   /* begin timers and HW serial */
   ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
   UI_timer.begin(UItimerCallback, UI_RATE);

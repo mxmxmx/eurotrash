@@ -48,7 +48,7 @@ class AudioPlaySerialFlash : public AudioStream
 public:
 	AudioPlaySerialFlash(void) : AudioStream(0, NULL), playing(0) { flashinit(); }
 	void play(const unsigned int data);
-	//void loop(const unsigned int data);
+	void seek(const unsigned int data, const unsigned int _pos);
 	void stop(void);
 	bool isPlaying(void);
 	bool pause(bool _paused);
@@ -59,15 +59,16 @@ public:
 //	void setPosition(const unsigned int n);
 	void setPositionMillis(const unsigned int millis);
 	void setPositionSamples(const unsigned int _samples);
-	//unsigned char flash_status(void);
-	//void spififo_flash_read_id(unsigned char *idt);
-	//void spififo_flash_chip_erase(boolean wait);
-	//void spififo_flash_page_program(unsigned char *wp,int pn);
-	//void spififo_flash_read_pages(unsigned char *p, int pn, const int n_pages);
+	int SamplesConsumedPerUpdate(void);
+	unsigned char flash_status(void);
+	void spififo_flash_read_id(unsigned char *idt);
+	void spififo_flash_chip_erase(boolean wait);
+	void spififo_flash_page_program(unsigned char *wp,int pn);
+	void spififo_flash_read_pages(unsigned char *p, int pn, const int n_pages);
 	virtual void update(void);
 protected:
 	void flashinit(void);	
-	//unsigned char spififo_flash_read_status(void);
+	unsigned char spififo_flash_read_status(void);
 	inline void readSerStart(const size_t position) __attribute__((always_inline));
 	inline void readSerDone(void) __attribute__((always_inline));
 private:
@@ -82,7 +83,6 @@ private:
 	inline uint32_t b2m(void) __attribute__((always_inline));
 	inline uint32_t calcMillis(uint32_t position) __attribute__((always_inline));
 	void write_pause(void);
-	int SamplesConsumedPerUpdate(void);
 };
 
 #endif

@@ -138,12 +138,13 @@ void process_buttons() {
         }
         else if (EVENT_B[_button] == HOLD) {
           // switch banks ?
-          if (SPI_FLASH_STATUS) { 
+          if (SPI_FLASH_STATUS+SPI_FLASH) { 
                 uint16_t _bank = audioChannels[_button]->bank;
                 uint16_t _xxx  = _bank*0x04 + CHANNELS*audioChannels[_button]->id;
                 // fade out channel
                 fade[_xxx]->fadeOut(FADE_OUT);
-                fade[_xxx+0x01]->fadeOut(FADE_OUT);
+                _xxx++;
+                fade[_xxx]->fadeOut(FADE_OUT);
                 // update
                 audioChannels[_button]->bank = ~_bank & 1u;
                 uint16_t _file = 0x0;

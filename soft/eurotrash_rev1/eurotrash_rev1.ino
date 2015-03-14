@@ -6,15 +6,17 @@
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
-*   micro SD card should be class 10.
+*   micro SD card should be *class 10*.
 *
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
 *
-*   - TD fix SPIFIFO for CS = 13
+*   - TD: fix SPIFIFO for CS = 13
+*   - TD: move eof to bytes
+*   - TD: spi flash parsing -> char[]
 */
 
-#define REV1 
+//#define REV1 
 
 #include <Audio.h>
 #include <Wire.h>
@@ -22,7 +24,7 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
-#include <play_rawflash15.h>
+#include <play_rawflash13.h>
 
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200

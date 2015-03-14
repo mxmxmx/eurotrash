@@ -146,9 +146,9 @@ void AudioPlaySerialFlash::seek(const unsigned int data, const unsigned int _pos
 	
 	if (playing == 0x01)      _p = 7; 
 	else if (playing == 0x02) _p = 6; 
-    else sample = _p = 5; 
-    sample = _pos<<_p; 
-    sample = sample < len ? sample : ((len>>_p)<<_p);
+	else sample = _p = 5; 
+	sample = _pos<<_p; 
+	sample = sample < len ? sample : ((len>>_p)<<_p);
 	len -= sample;
 	__enable_irq();
 	//Serial.printf("len:%d pos: %d\r\n", len, _pos);

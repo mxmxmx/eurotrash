@@ -226,8 +226,9 @@ void update_channel(struct audioChannel* _ch) {
 
 /* --------------------------------------------------------------- */
 
+/*
 String makedisplay(int16_t number) {
-    
+
     String tmp;
     if (number > 999)      { tmp = "     "; tmp.concat(number); }
     else if (number > 99)  { tmp = "      "; tmp.concat(number); }
@@ -236,6 +237,18 @@ String makedisplay(int16_t number) {
     else tmp = "        0"; 
     return tmp;
 } 
+*/
+
+void value_to_msg(char* _msg, int16_t _num) {
+ 
+    char msg[] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0' };
+     
+    if (_num > 99)      sprintf(msg+6, "%d", _num); 
+    else if (_num > 9)  sprintf(msg+7, "%d", _num); 
+    else if (_num >= 0) sprintf(msg+8, "%d", _num); 
+    
+    memcpy(_msg, msg, DISPLAY_LEN+1);
+}
 
 /* --------------------------------------------------------------- */
 
@@ -274,7 +287,8 @@ void update_display(uint8_t _channel, uint16_t _newval) {
             if (tmp < 0) { tmp = 0; encoder[_channel].setPos(0x0); }
             else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
             audioChannels[_channel]->pos0 = tmp;
-            memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
+            //memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
+            value_to_msg(msg, tmp);
             cmd +=0x02;
             break;
           
@@ -283,13 +297,15 @@ void update_display(uint8_t _channel, uint16_t _newval) {
            if (tmp < 1)  { tmp = 1; encoder[_channel].setPos(0x1); }
            else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
            audioChannels[_channel]->posX = tmp;
-           memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
+           //memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
+           value_to_msg(msg, tmp);
            cmd +=0x04;
            break;
      }  
      
      case CALIBRATE: {
-           if (!_channel) memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1); // left = display ADC
+           //if (!_channel) memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1); // left = display ADC
+           if (!_channel) value_to_msg(msg, tmp);
            else if (_channel && _newval > 0) memcpy(msg, _SAVE, DISPLAY_LEN);
            else memcpy(msg, _OK, DISPLAY_LEN);
            break;

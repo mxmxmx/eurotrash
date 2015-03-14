@@ -89,11 +89,11 @@ void _play(struct audioChannel* _channel) {
 
 void eof_left() {
     
-    //uint32_t _pos  = _bank ? raw[_swap]->positionBytes() : wav[_swap]->positionBytes();
+   // uint16_t _swap = ~audioChannels[LEFT]->swap & 1u;
+   // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
   
    if (millis() - last_LCLK > audioChannels[LEFT]->eof) {
   
-        FADE_LEFT = true;
         uint8_t  _bank = audioChannels[LEFT]->bank;
         uint8_t  _swap = ~audioChannels[LEFT]->swap & 1u;
       
@@ -107,11 +107,11 @@ void eof_left() {
 
 void eof_right() {
   
-    // uint32_t _pos  = _bank ? raw[_swap]->positionBytes() : wav[_swap]->positionBytes();
+    // uint16_t _swap = ~audioChannels[RIGHT]->swap & 1u;
+    // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
   
     if (millis() - last_RCLK > audioChannels[RIGHT]->eof) {
        
-        FADE_RIGHT = true;
         uint8_t  _bank = audioChannels[RIGHT]->bank;
         uint8_t  _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS; 
           
@@ -177,7 +177,7 @@ void generate_file_list() {  // to do - sort alphabetically?
 
 void update_eof(uint8_t _channel) {
   
-        /* update EOF */
+   /* update EOF */
    if (_channel < CHANNELS) { 
      
        int32_t _srt, _end; 
@@ -207,8 +207,11 @@ void calibrate() {
       for (int i = 0; i < 200; i++) {
    
            average +=  analogRead(CV1);
+           delay(2);
            average +=  analogRead(CV2);
+           delay(2);
            average +=  analogRead(CV3);
+           delay(2);
            average +=  analogRead(CV4);
            delay(2);
       }

@@ -39,7 +39,7 @@
 #define STATE_PARSE2			9  // looking for 16 byte format header
 #define STATE_PARSE3			10 // looking for 8 byte data header
 #define STATE_PARSE4			11 // ignoring unknown chunk
-#define STATE_STOP			12
+#define STATE_STOP			    12
 
 void AudioPlaySdWav::begin(void)
 {
@@ -64,7 +64,10 @@ bool AudioPlaySdWav::play(const char *filename)
 	__disable_irq();
 	wavfile = SD.open(filename);
 	__enable_irq();
-	if (!wavfile) return false;
+	if (!wavfile) { 
+		AudioStopUsingSPI();
+		return false;
+	}
 	buffer_length = 0;
 	buffer_offset = 0;
 	state_play = STATE_STOP;
@@ -81,13 +84,16 @@ bool AudioPlaySdWav::seek(const char *filename, uint32_t pos)
 	__disable_irq();
 	wavfile = SD.open(filename);
 	__enable_irq();
-	if (!wavfile) return false;
+	if (!wavfile) {
+		AudioStopUsingSPI();
+		return false;
+	}
 	buffer_length = 0;
 	buffer_offset = 0;
 	state_play = STATE_STOP;
 	data_length = 20;
 	header_offset = 0;
-        playseek = true;
+    playseek = true;
 	state = STATE_PARSE1;
 	return true;
 }
@@ -147,7 +153,6 @@ void AudioPlaySdWav::update(void)
 		// we have buffered data
 		if (consume(n)) return; // it was enough to transmit audio
 	}
-
 	// we only get to this point when buffer[512] is empty
 	if (state != STATE_STOP && wavfile.available()) {
 		// we can read more data from the file...
@@ -300,7 +305,7 @@ start:
                                 //if (byte_offset > data_length) byte_offset = data_length;
 				wavfile.seek(byte_offset); 
 				playseek = false;
-      				data_length  -= byte_offset;
+      			data_length  -= byte_offset;
 			}
 			leftover_bytes = 0;
 			state = state_play;

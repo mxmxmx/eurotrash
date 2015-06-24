@@ -75,6 +75,7 @@ typedef struct audioChannel {
   
     uint8_t     id;            // channel L/R
     uint8_t     file_wav;      // fileSelect
+    uint8_t     _open;         // files open ?
     uint32_t    pos0;          // file start pos manual
     uint32_t    posX;          // end pos
     uint32_t    srt;           // start pos
@@ -91,16 +92,19 @@ struct audioChannel *audioChannels[CHANNELS];
 
 /* ----------------------- channel misc ------------------- */
 
-const uint8_t  FADE_IN  = 3;       // fade in  (adjust to your liking)
-const uint16_t FADE_OUT = 100;     // fade out (ditto)
-const uint8_t  FADE_IN_RAW  = 1;   // fade in  / flash
-//const uint16_t FADE_OUT_RAW = 70;  // fade out / flash
+const uint16_t FADE_IN  = 3;         // fade in  (adjust to your liking)
+const uint16_t FADE_OUT = 100;       // fade out (ditto)
+const uint16_t FADE_IN_RAW  = 1;     // fade in  / flash
+const uint16_t _FADE_F_CHANGE = 300; // fade out / file change 
 
-uint8_t  FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
+
+uint32_t _FADE_TIMESTAMP_F_CHANGE = 0;
+
+uint16_t FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
-const uint8_t TRIG_LENGTH = 25; // trig length / clock out
+const uint16_t TRIG_LENGTH = 25; // trig length / clock out
 
-uint8_t SPI_FLASH_STATUS = 0;
+uint16_t SPI_FLASH_STATUS = 0;
 
 /* ------------------------- pins ------------------------- */
 
@@ -292,6 +296,14 @@ void loop()
      leftright();
    
      if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
+     
+     leftright();
+     
+     if (!audioChannels[LEFT]->_open)  _open_next(audioChannels[LEFT]);
+     
+     leftright();
+     
+     if (!audioChannels[RIGHT]->_open) _open_next(audioChannels[RIGHT]);
   } 
 }
 

@@ -35,14 +35,16 @@ class AudioPlaySdWav : public AudioStream
 public:
 	AudioPlaySdWav(void) : AudioStream(0, NULL) { begin(); }
 	void begin(void);
+	bool open(const char *filename);
 	bool play(const char *filename);
 	bool seek(const char *filename, uint32_t pos);
+	bool seek(uint32_t pos);
 	void stop(void);
 	bool isPlaying(void);
 	uint32_t positionMillis(void);
-        uint32_t positionBytes(void);
+	uint32_t positionBytes(void);
 	uint32_t lengthMillis(void);
-        uint32_t lengthBytes(void);
+	uint32_t lengthBytes(void);
 	virtual void update(void);
 private:
 	File wavfile;

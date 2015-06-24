@@ -109,7 +109,6 @@ void _play(struct audioChannel* _channel) {
             raw[_numVoice]->seek(f_adr, _startPos);
        }
        else { 
-             Serial.println("ok, playing");
              fade[_numVoice]->fadeIn(FADE_IN);
              wav[_numVoice]->seek(_startPos>>9); 
        }   

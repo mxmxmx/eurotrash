@@ -11,6 +11,7 @@ void init_channels(uint8_t f) {
         
         audioChannels[i]->id = i;
         audioChannels[i]->file_wav = _file;
+        audioChannels[i]->_open = 0;
         audioChannels[i]->pos0 = 0;
         audioChannels[i]->posX = CTRL_RESOLUTION;
         audioChannels[i]->srt = 0;
@@ -29,14 +30,14 @@ void leftright() {
   
  if (LCLK) {  // clock?
   
-       _play(audioChannels[LEFT]);
+       if (audioChannels[LEFT]->_open)  _play(audioChannels[LEFT]);
        LCLK = false;
        FADE_LEFT = false;
        last_LCLK = millis();
   } 
   if (RCLK) { // clock?
  
-       _play(audioChannels[RIGHT]);
+       if (audioChannels[RIGHT]->_open) _play(audioChannels[RIGHT]);
        RCLK = false;
        FADE_RIGHT = false;
        last_RCLK = millis();
@@ -45,16 +46,51 @@ void leftright() {
 
 /* =============================================== */
 
+
+uint16_t _open_next(struct audioChannel* _channel) {
+  
+    uint16_t _id, _file, _bank;
+    
+     _bank = _channel->bank;
+     _file = _channel->file_wav;
+     _id   = _channel->id*CHANNELS;
+    
+     //  update channel data: 
+     _channel->ctrl_res = CTRL_RES[_file + _bank*MAXFILES];
+     _channel->ctrl_res_eof = CTRL_RES_EOF[_file + _bank*MAXFILES]; 
+          
+    if (_bank) { 
+         _channel->_open = true; 
+         return false;
+    }
+    
+    if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
+      
+          // close old file : 
+          wav[_id]->stop();     
+          wav[_id+0x1]->stop(); 
+          // open new file :  
+          const char *thisfile = FILES[_file]; 
+          wav[_id]->open(thisfile);
+          wav[_id+0x1]->open(thisfile);
+          _channel->swap  = 0x0;   // reset
+          _channel->_open = true;  // play
+          Serial.println("open again: ok");
+          return true;
+    }
+}
+
+/* =============================================== */
+
+
 void _play(struct audioChannel* _channel) {
   
-      uint8_t _swap, _bank, _numVoice, _id;
-      uint16_t _file;
+      uint16_t _swap, _bank, _numVoice, _id, _file;
       int32_t _startPos;
       
       _swap   = _channel->swap;   
       _bank   = _channel->bank;     
       _id     = _channel->id; 
-      _file   = _channel->file_wav;
       
       _numVoice = _swap + _id*CHANNELS;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
       
@@ -67,22 +103,20 @@ void _play(struct audioChannel* _channel) {
        
        if (_bank) {
             _channel->srt = 0x00;                     // actually, don't remember start pos (this doesn't work properly for short files / integers)
+            _file   = _channel->file_wav;
             fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
             const unsigned int f_adr = RAW_FILE_ADR[_file]; 
             raw[_numVoice]->seek(f_adr, _startPos);
        }
        else { 
+             Serial.println("ok, playing");
              fade[_numVoice]->fadeIn(FADE_IN);
-             const char *playthis = FILES[_file];  
-             wav[_numVoice]->seek(playthis, _startPos>>9); 
+             wav[_numVoice]->seek(_startPos>>9); 
        }   
        /*  swap file and fade out previous file: */  
         _swap = ~_swap & 1u;
         fade[_swap + _id*CHANNELS + _bank*0x4]->fadeOut(FADE_OUT); // ?
         _channel->swap = _swap;
-       /*  update channel data: */
-        _channel->ctrl_res = CTRL_RES[_file + _bank*MAXFILES];
-        _channel->ctrl_res_eof = CTRL_RES_EOF[_file + _bank*MAXFILES]; 
 }
  
 /* =============================================== */

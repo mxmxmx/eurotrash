@@ -9,7 +9,7 @@
 ***********************************************************/
 
 #include "U8glib.h"
-U8GLIB_SSD1306_128X32 u8g(8, 6, A1, 10, A0);	
+U8GLIB_SSD1306_128X32 u8g(8, 6, A1, 10, A0);	 
 
 #define MSG_SIZE 14    // display
 #define MSG_SIZE_RX 10 
@@ -33,7 +33,7 @@ void setup(void) {
   delay(200);
   u8g.setFont(u8g_font_unifont);
   delay(200);
-  Serial.begin(115200);
+  Serial.begin(115200); // RX
   
 }
 /* --------------------------------------- */

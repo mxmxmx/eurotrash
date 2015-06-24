@@ -221,7 +221,8 @@ void update_channel(struct audioChannel* _ch) {
         uint8_t _file = filedisplay[_id]; // file #
         _ch->file_wav = _file;            // select file
         update_display(_id, _file);       // update menu
-
+        _ch->_open = false;               // close prev files
+        _FADE_TIMESTAMP_F_CHANGE = millis();
 }  
 
 /* --------------------------------------------------------------- */

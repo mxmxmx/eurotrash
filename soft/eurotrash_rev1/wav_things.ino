@@ -1,6 +1,6 @@
 /*
 *       
-* some things to deal with the wav files. mainly opening + swapping the audio objects
+* some things to deal with the wav files. mainly opening + swapping the audio objects...
 *
 */
 

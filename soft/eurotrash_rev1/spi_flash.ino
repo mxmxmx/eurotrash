@@ -1,7 +1,7 @@
 /*
 *
 * spi flash utilities. with special thanks to Frank B.
-*
+* ...
 */
 
 #define FLASHSIZE 0x1000000

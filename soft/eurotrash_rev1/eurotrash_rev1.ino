@@ -14,17 +14,18 @@
 *   - TD: fix SPIFIFO for CS = 13
 *   - TD: move eof to bytes
 *   - TD: spi flash parsing -> char[]
+*   - TD: spi flash may have been broken ... ?
 */
 
-//#define REV1 
+//#define REV1  // uncomment if using rev1
 
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <EEPROM.h>
-#include <rotaryplus.h>  // used for the encoders. the standard/official <Encoder> library doesn't seem to work properly here
-#include <play_rawflash13.h>
+#include <rotaryplus.h>  
+#include <play_rawflash13.h> // change to  <play_rawflash15.h>, if using rev1
 
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200

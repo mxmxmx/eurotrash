@@ -120,8 +120,9 @@ bool AudioPlaySdWav::seek(uint32_t pos)
 		AudioStopUsingSPI();
 		return false;
 	}
-    __disable_irq();
+	
     AudioStartUsingSPI();
+    __disable_irq();
 	wavfile.seek(0x0); // actually, we don't want to parse the header again 
 	__enable_irq();
 	byte_offset = (1+pos)<<9;

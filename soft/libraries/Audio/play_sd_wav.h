@@ -30,6 +30,8 @@
 #include "AudioStream.h"
 #include "SD.h"
 
+// misc functions added
+ 
 class AudioPlaySdWav : public AudioStream
 {
 public:

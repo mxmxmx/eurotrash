@@ -95,6 +95,7 @@ bool AudioPlaySdWav::seek(const char *filename, uint32_t pos)
 {
 	byte_offset = (1+pos)<<9;
 	stop();
+
 	AudioStartUsingSPI();
 	__disable_irq();
 	wavfile = SD.open(filename);
@@ -121,8 +122,8 @@ bool AudioPlaySdWav::seek(uint32_t pos)
 		return false;
 	}
 	
-    AudioStartUsingSPI();
-    __disable_irq();
+	AudioStartUsingSPI();
+	__disable_irq();
 	wavfile.seek(0x0); // actually, we don't want to parse the header again 
 	__enable_irq();
 	byte_offset = (1+pos)<<9;

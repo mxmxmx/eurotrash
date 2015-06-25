@@ -101,8 +101,7 @@ const uint16_t _FADE_F_CHANGE = 300; // fade out / file change
 uint32_t _FADE_TIMESTAMP_F_CHANGE = 0;
 
 uint16_t FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF, PAUSE_FILE_L, PAUSE_FILE_R;
-uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
-const uint16_t TRIG_LENGTH = FADE_OUT; // trig length / clock out
+uint32_t _LCLK_TIMESTAMP, _RCLK_TIMESTAMP, _EOF_L_TIMESTAMP, _EOF_R_TIMESTAMP; // trigger + E-o-F timestamps
 
 uint16_t SPI_FLASH_STATUS = 0;
 

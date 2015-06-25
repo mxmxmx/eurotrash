@@ -24,52 +24,6 @@ void init_channels(uint8_t f) {
   } 
 }  
 
-
-// main loop : 
-
-void _loop() {
- 
-     leftright();
-   
-     if (!FADE_LEFT) eof_left();  // fade out voice ?
-
-     leftright();
-   
-     if (!FADE_RIGHT) eof_right(); // fade out voice ?
-     
-     leftright();
-   
-     if (UI) _UI();                 // check UI ?
-   
-     leftright();
-   
-     if (_ADC) _adc();              // read ADC ? 
-   
-     leftright();
-    
-     if (EOF_L_OFF) _pause(LEFT);   // pause streaming ? (active voice) 
-   
-     leftright();
-   
-     if (EOF_R_OFF) _pause(RIGHT);  // pause streaming ? (active voice) 
-     
-     leftright();
-     
-     if (!audioChannels[LEFT]->_open)  _open_next(audioChannels[LEFT]); // new file ?
-     
-     leftright();
-     
-     if (!audioChannels[RIGHT]->_open) _open_next(audioChannels[RIGHT]); // new file ?
-     
-     if (PAUSE_FILE_L) _pause_file_L(); // pause streaming ? (inactive voice) 
-     
-     leftright();
-     
-     if (PAUSE_FILE_R) _pause_file_R(); // pause streaming ? (inactive voice) 
-  
-}
-
-
 /* ====================check clocks================ */
 
 void leftright() {
@@ -79,19 +33,18 @@ void leftright() {
        if (audioChannels[LEFT]->_open && !PAUSE_FILE_L)  _play(audioChannels[LEFT]); 
        LCLK = false;
        FADE_LEFT = false;
-       last_LCLK = millis();
+       _LCLK_TIMESTAMP = millis();
   } 
   if (RCLK) { // clock?
  
        if (audioChannels[RIGHT]->_open && !PAUSE_FILE_R) _play(audioChannels[RIGHT]);
        RCLK = false;
        FADE_RIGHT = false;
-       last_RCLK = millis();
+       _RCLK_TIMESTAMP = millis();
    } 
 }
 
 /* =============================================== */
-
 
 void _open_next(struct audioChannel* _channel) {
   
@@ -130,7 +83,6 @@ void _open_next(struct audioChannel* _channel) {
 }
 
 /* =============================================== */
-
 
 void _play(struct audioChannel* _channel) {
   
@@ -175,7 +127,7 @@ void eof_left() {
    // uint16_t _swap = ~audioChannels[LEFT]->swap & 1u;
    // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
   
-   if (millis() - last_LCLK > audioChannels[LEFT]->eof) {
+   if (millis() - _LCLK_TIMESTAMP > audioChannels[LEFT]->eof) {
   
         uint8_t  _bank = audioChannels[LEFT]->bank;
         uint8_t  _swap = ~audioChannels[LEFT]->swap & 1u;
@@ -183,7 +135,7 @@ void eof_left() {
         digitalWriteFast(EOF_L, HIGH); 
         
         fade[_swap+_bank*0x4]->fadeOut(FADE_OUT); 
-        last_EOF_L = millis();
+        _EOF_L_TIMESTAMP = millis();
         EOF_L_OFF = FADE_LEFT = true;
      }  
 }
@@ -193,7 +145,7 @@ void eof_right() {
     // uint16_t _swap = ~audioChannels[RIGHT]->swap & 1u;
     // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
   
-    if (millis() - last_RCLK > audioChannels[RIGHT]->eof) {
+    if (millis() - _RCLK_TIMESTAMP > audioChannels[RIGHT]->eof) {
        
         uint8_t  _bank = audioChannels[RIGHT]->bank;
         uint8_t  _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS; 
@@ -201,23 +153,27 @@ void eof_right() {
         digitalWriteFast(EOF_R, HIGH);  
             
         fade[_swap+_bank*0x4]->fadeOut(FADE_OUT);      
-        last_EOF_R = millis();
+        _EOF_R_TIMESTAMP = millis();
         EOF_R_OFF = FADE_RIGHT = true;
      } 
 }
 
 /* =============================================== */
 
-void _pause(uint16_t _channel) { // pause voice that's playing
+void _pause_active_L() { // pause voice that's playing
 
-    if (_channel == LEFT && millis() - last_EOF_L > TRIG_LENGTH) { 
+    if (millis() - _EOF_L_TIMESTAMP > FADE_OUT) { 
   
         digitalWriteFast(EOF_L, LOW);  
         uint16_t _swap = ~audioChannels[LEFT]->swap & 1u;
         wav[_swap]->pause(); 
         EOF_L_OFF = false; 
      }  
-     else if (_channel == RIGHT && millis() - last_EOF_R > TRIG_LENGTH) { 
+}
+
+void _pause_active_R() {
+  
+     if (millis() - _EOF_R_TIMESTAMP > FADE_OUT) { 
   
         digitalWriteFast(EOF_R, LOW);  
         uint16_t _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS;
@@ -228,9 +184,9 @@ void _pause(uint16_t _channel) { // pause voice that's playing
 
 /* =============================================== */
 
-void _pause_file_L() { // pause voice that's no longer playing
+void _pause_inactive_L() { // pause voice that's no longer playing
 
-    if (millis() - last_LCLK > FADE_OUT) { 
+    if (millis() - _LCLK_TIMESTAMP > FADE_OUT) { 
    
         uint16_t _swap = audioChannels[LEFT]->swap & 1u;
         wav[_swap]->pause(); 
@@ -238,9 +194,9 @@ void _pause_file_L() { // pause voice that's no longer playing
      }   
 }
 
-void _pause_file_R() { 
+void _pause_inactive_R() { 
  
-     if (millis() - last_RCLK > FADE_OUT) { 
+     if (millis() - _RCLK_TIMESTAMP > FADE_OUT) { 
    
         uint16_t _swap = (audioChannels[RIGHT]->swap & 1u) + CHANNELS;
         wav[_swap]->pause();  

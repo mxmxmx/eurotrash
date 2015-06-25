@@ -16,7 +16,7 @@
 *   - TD: spi flash parsing -> char[]
 */
 
-#define REV1  // uncomment if using rev 1 boards
+//#define REV1  // uncomment if using rev 1 boards
 
 #include <Audio.h>
 #include <Wire.h>
@@ -24,7 +24,7 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <rotaryplus.h> 
-#include <play_rawflash15.h> // change to <play_rawflash15.h> if using rev1 boards
+#include <play_rawflash13.h> // change to <play_rawflash15.h> if using rev1 boards
 
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200

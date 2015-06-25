@@ -30,56 +30,18 @@ void leftright() {
   
  if (LCLK) {  // clock?
   
-       if (audioChannels[LEFT]->_open && !PAUSE_FILE_L)  _play(audioChannels[LEFT]); 
+       if (audioChannels[LEFT]->_open)  _play(audioChannels[LEFT]); 
        LCLK = false;
        FADE_LEFT = false;
        _LCLK_TIMESTAMP = millis();
   } 
   if (RCLK) { // clock?
  
-       if (audioChannels[RIGHT]->_open && !PAUSE_FILE_R) _play(audioChannels[RIGHT]);
+       if (audioChannels[RIGHT]->_open) _play(audioChannels[RIGHT]);
        RCLK = false;
        FADE_RIGHT = false;
        _RCLK_TIMESTAMP = millis();
    } 
-}
-
-/* =============================================== */
-
-void _open_next(struct audioChannel* _channel) {
-  
-     if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
-      
-         uint16_t  _id, _file;
-     
-         _file = _channel->file_wav;
-         _id   = _channel->id*CHANNELS;
-         //  update channel data: 
-         _channel->ctrl_res = CTRL_RES[_file];
-         _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
-      
-         // close files : 
-         wav[_id]->close();     
-         wav[_id+0x1]->close(); 
-         // open new files :  
-         const char *thisfile = FILES[_file];
-         wav[_id]->open(thisfile);
-         wav[_id+0x1]->open(thisfile);
-         _channel->swap  = 0x0;   // reset
-         _channel->_open = 0x1;   // play
-    }
-    
-    else if (_channel->bank) {  // SPI flash 
-      
-         uint16_t _id, _file;
-    
-         _file = _channel->file_wav;
-         _id   = _channel->id*CHANNELS;  
-         // update channel data: 
-         _channel->ctrl_res = CTRL_RES[_file + MAXFILES];
-         _channel->ctrl_res_eof = CTRL_RES_EOF[_file + MAXFILES]; 
-         _channel->_open = 0x1; 
-    }
 }
 
 /* =============================================== */
@@ -202,6 +164,44 @@ void _pause_inactive_R() {
         wav[_swap]->pause();  
         PAUSE_FILE_R = false; 
      } 
+}
+
+/* =============================================== */
+
+void _open_next(struct audioChannel* _channel) {
+  
+     if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
+      
+         uint16_t  _id, _file;
+     
+         _file = _channel->file_wav;
+         _id   = _channel->id*CHANNELS;
+         //  update channel data: 
+         _channel->ctrl_res = CTRL_RES[_file];
+         _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
+      
+         // close files : 
+         wav[_id]->close();     
+         wav[_id+0x1]->close(); 
+         // open new files :  
+         const char *thisfile = FILES[_file];
+         wav[_id]->open(thisfile);
+         wav[_id+0x1]->open(thisfile);
+         _channel->swap  = 0x0;   // reset
+         _channel->_open = 0x1;   // play
+    }
+    
+    else if (_channel->bank) {  // SPI flash 
+      
+         uint16_t _id, _file;
+    
+         _file = _channel->file_wav;
+         _id   = _channel->id*CHANNELS;  
+         // update channel data: 
+         _channel->ctrl_res = CTRL_RES[_file + MAXFILES];
+         _channel->ctrl_res_eof = CTRL_RES_EOF[_file + MAXFILES]; 
+         _channel->_open = 0x1; 
+    }
 }
 
 /* =============================================== */

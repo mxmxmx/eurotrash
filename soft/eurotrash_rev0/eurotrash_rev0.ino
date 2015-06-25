@@ -6,7 +6,7 @@
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
-*   micro SD card should be *class 10*.
+*   micro SD card should be *class 10* !
 *
 *   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
 *   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
@@ -14,18 +14,17 @@
 *   - TD: fix SPIFIFO for CS = 13
 *   - TD: move eof to bytes
 *   - TD: spi flash parsing -> char[]
-*   - TD: spi flash may have been broken ... ?
 */
 
-//#define REV1  // uncomment if using rev1
+//#define REV1  // uncomment if using rev 1 boards
 
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <EEPROM.h>
-#include <rotaryplus.h>  
-#include <play_rawflash13.h> // change to  <play_rawflash15.h>, if using rev1
+#include <rotaryplus.h> 
+#include <play_rawflash13.h> // change to <play_rawflash15.h> if using rev1 boards
 
 
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
@@ -101,9 +100,9 @@ const uint16_t _FADE_F_CHANGE = 300; // fade out / file change
 
 uint32_t _FADE_TIMESTAMP_F_CHANGE = 0;
 
-uint16_t FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF;
+uint16_t FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF, PAUSE_FILE_L, PAUSE_FILE_R;
 uint32_t last_LCLK, last_RCLK, last_EOF_L, last_EOF_R;
-const uint16_t TRIG_LENGTH = 25; // trig length / clock out
+const uint16_t TRIG_LENGTH = FADE_OUT; // trig length / clock out
 
 uint16_t SPI_FLASH_STATUS = 0;
 
@@ -191,7 +190,7 @@ void setup() {
       digitalWriteFast(CS_MEM, HIGH);
   #endif    
   /* audio API */
-  AudioMemory(15);
+  AudioMemory(35);
   SPI.setMOSI(7);
   SPI.setSCK(14);
   
@@ -274,37 +273,7 @@ void loop()
   
   while(1) {
 
-     leftright();
-   
-     if (!FADE_LEFT) eof_left();
-       
-     leftright();
-   
-     if (!FADE_RIGHT) eof_right();
-     
-     leftright();
-   
-     if (UI) _UI();
-   
-     leftright();
-   
-     if (_ADC) _adc();
-   
-     leftright();
-    
-     if (EOF_L_OFF && (millis() - last_EOF_L > TRIG_LENGTH))  { digitalWriteFast(EOF_L, LOW); EOF_L_OFF = false; }
-   
-     leftright();
-   
-     if (EOF_R_OFF && (millis() - last_EOF_R > TRIG_LENGTH))  { digitalWriteFast(EOF_R, LOW); EOF_R_OFF = false; }
-     
-     leftright();
-     
-     if (!audioChannels[LEFT]->_open)  _open_next(audioChannels[LEFT]);
-     
-     leftright();
-     
-     if (!audioChannels[RIGHT]->_open) _open_next(audioChannels[RIGHT]);
+     _loop();
   } 
 }
 

@@ -1,6 +1,6 @@
 /*
 *
-*  UI + menu 
+*  UI : display / encoders
 *
 */
 
@@ -222,23 +222,14 @@ void update_channel(struct audioChannel* _ch) {
         _ch->file_wav = _file;            // select file
         update_display(_id, _file);       // update menu
         _ch->_open = false;               // close prev files
+        
+        fade[_id*CHANNELS]->fadeOut(_FADE_F_CHANGE);
+        fade[_id*CHANNELS+0x1]->fadeOut(_FADE_F_CHANGE);
         _FADE_TIMESTAMP_F_CHANGE = millis();
+
 }  
 
 /* --------------------------------------------------------------- */
-
-/*
-String makedisplay(int16_t number) {
-
-    String tmp;
-    if (number > 999)      { tmp = "     "; tmp.concat(number); }
-    else if (number > 99)  { tmp = "      "; tmp.concat(number); }
-    else if (number > 9)   { tmp = "       "; tmp.concat(number); }
-    else if (number >= 0)  { tmp = "        "; tmp.concat(number); }
-    else tmp = "        0"; 
-    return tmp;
-} 
-*/
 
 void value_to_msg(char* _msg, int16_t _num) {
  

@@ -42,6 +42,8 @@ public:
 	bool seek(const char *filename, uint32_t pos);
 	bool seek(uint32_t pos);
 	void stop(void);
+	void pause(void);
+	void close(void);
 	bool isPlaying(void);
 	uint32_t positionMillis(void);
 	uint32_t positionBytes(void);

@@ -60,8 +60,9 @@ void AudioPlaySdWav::begin(void)
 
 bool AudioPlaySdWav::open(const char *filename)
 {
-	stop();
+	close();
 	__disable_irq();
+	AudioStartUsingSPI();
 	wavfile = SD.open(filename);
 	__enable_irq();
 	if (!wavfile) { 
@@ -136,6 +137,22 @@ bool AudioPlaySdWav::seek(uint32_t pos)
 	return true;
 }
 
+void AudioPlaySdWav::close(void)
+{
+ 	if (wavfile) {
+		__disable_irq();
+		audio_block_t *b1 = block_left;
+		block_left = NULL;
+		audio_block_t *b2 = block_right;
+		block_right = NULL;
+		state = STATE_STOP;
+		__enable_irq();
+		if (b1) release(b1);
+		if (b2) release(b2);
+		wavfile.close();
+		AudioStopUsingSPI();
+	}
+}
 
 void AudioPlaySdWav::stop(void)
 {
@@ -150,6 +167,24 @@ void AudioPlaySdWav::stop(void)
 		if (b1) release(b1);
 		if (b2) release(b2);
 		wavfile.close();
+		AudioStopUsingSPI();
+	} else {
+		__enable_irq();
+	}
+}
+
+void AudioPlaySdWav::pause(void)
+{
+	__disable_irq();
+	if (state != STATE_STOP) {
+		audio_block_t *b1 = block_left;
+		block_left = NULL;
+		audio_block_t *b2 = block_right;
+		block_right = NULL;
+		state = STATE_STOP;
+		__enable_irq();
+		if (b1) release(b1);
+		if (b2) release(b2);
 		AudioStopUsingSPI();
 	} else {
 		__enable_irq();

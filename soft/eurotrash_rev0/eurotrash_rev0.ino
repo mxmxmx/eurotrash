@@ -73,9 +73,9 @@ AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
 typedef struct audioChannel {
   
-    uint16_t     id;           // channel L/R
-    uint16_t     file_wav;     // fileSelect
-    uint16_t     _open;        // files open ?
+    uint16_t    id;            // channel L/R
+    uint16_t    file_wav;      // fileSelect
+    int16_t     _open;         // files open ?
     uint32_t    pos0;          // file start pos manual
     uint32_t    posX;          // end pos
     uint32_t    srt;           // start pos
@@ -83,8 +83,8 @@ typedef struct audioChannel {
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
     uint32_t    eof;           // end of file (in ms)
-    uint16_t     swap;         // ping-pong file (1/2; 3/4)
-    uint16_t     bank;         // bank: SD / Flash
+    uint16_t    swap;          // ping-pong file (1/2; 3/4)
+    uint16_t    bank;          // bank: SD / Flash
 
 } audioChannel;
 

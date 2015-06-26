@@ -226,7 +226,6 @@ void update_channel(struct audioChannel* _ch) {
         fade[_id*CHANNELS]->fadeOut(_FADE_F_CHANGE);
         fade[_id*CHANNELS+0x1]->fadeOut(_FADE_F_CHANGE);
         _FADE_TIMESTAMP_F_CHANGE = millis();
-
 }  
 
 /* --------------------------------------------------------------- */

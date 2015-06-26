@@ -156,7 +156,7 @@ void _pause_inactive_L() { // pause voice that's no longer playing
    
         uint16_t _swap = audioChannels[LEFT]->swap & 1u;
         wav[_swap]->pause();
-        audioChannels[LEFT]->_open--; // # open files
+        audioChannels[LEFT]->_open ? audioChannels[LEFT]->_open-- : audioChannels[LEFT]->_open; // # open files
         PAUSE_FILE_L = false; 
      }   
 }
@@ -167,7 +167,7 @@ void _pause_inactive_R() {
    
         uint16_t _swap = (audioChannels[RIGHT]->swap & 1u) + CHANNELS;
         wav[_swap]->pause();  
-        audioChannels[RIGHT]->_open--; // # open files
+        audioChannels[RIGHT]->_open ? audioChannels[RIGHT]->_open-- : audioChannels[RIGHT]->_open; // # open files
         PAUSE_FILE_R = false; 
      } 
 }
@@ -179,7 +179,7 @@ void _open_next(struct audioChannel* _channel) {
      if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
       
          uint16_t  _id, _file;
-     
+         
          _id   = _channel->id*CHANNELS;
          _file = _channel->file_wav;
          const char *_file_name = FILES[_file];

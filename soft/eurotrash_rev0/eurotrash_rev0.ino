@@ -1,6 +1,6 @@
 /*
 *   eurotrash
-*   dual wav player (test version).
+*   dual wav player. 'beta'
 *
 *   - wav files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
@@ -73,9 +73,9 @@ AudioConnection          ac_13(mixR, 0, pcm5102a, 1);
 
 typedef struct audioChannel {
   
-    uint8_t     id;            // channel L/R
-    uint8_t     file_wav;      // fileSelect
-    uint8_t     _open;         // files open ?
+    uint16_t     id;           // channel L/R
+    uint16_t     file_wav;     // fileSelect
+    uint16_t     _open;        // files open ?
     uint32_t    pos0;          // file start pos manual
     uint32_t    posX;          // end pos
     uint32_t    srt;           // start pos
@@ -83,8 +83,8 @@ typedef struct audioChannel {
     uint32_t    ctrl_res_eof;  // eof resolution  (in ms) 
     float       _gain;         // volume 
     uint32_t    eof;           // end of file (in ms)
-    uint8_t     swap;          // ping-pong file (1/2; 3/4)
-    uint8_t     bank;          // bank: SD / Flash
+    uint16_t     swap;         // ping-pong file (1/2; 3/4)
+    uint16_t     bank;         // bank: SD / Flash
 
 } audioChannel;
 
@@ -141,7 +141,7 @@ uint16_t SPI_FLASH_STATUS = 0;
 #define ADC_RES 12
 
 int16_t CV[numADC];
-uint8_t ADC_cycle;
+uint16_t ADC_cycle;
 uint16_t HALFSCALE = 0; 
 
 /* encoders */ 
@@ -149,22 +149,35 @@ Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}};
 
 /* ----------------------- timers + ISR stuff ------------------------ */
 
-volatile uint8_t LCLK;   
-volatile uint8_t RCLK;
-uint32_t LASTBUTTON;
+volatile uint16_t LCLK;   
+volatile uint16_t RCLK;
+uint32_t _TIMESTAMP_BUTTON;
 const uint16_t DEBOUNCE = 250;
 
-void CLK_ISR_L() { LCLK = true; }
-void CLK_ISR_R() { RCLK = true; }
+void FASTRUN CLK_ISR_L() 
+{ 
+  LCLK = true; 
+}
+void FASTRUN CLK_ISR_R() 
+{ 
+  RCLK = true; 
+}
 
 IntervalTimer UI_timer, ADC_timer;
 volatile uint8_t UI  = false;
 volatile uint8_t _ADC = false;
 
-#define UI_RATE  15000  // UI update rate
+#define UI_RATE  10000  // UI update rate
 #define ADC_RATE 250    // ADC sampling rate (*4)
-void UItimerCallback()  { UI = true;  }
-void ADCtimerCallback() { _ADC = true; }
+
+void UItimerCallback()  
+{ 
+  UI = true;  
+}
+void ADCtimerCallback() 
+{ 
+  _ADC = true; 
+}
 
 /* ------------------------------------------------------ */
 
@@ -174,12 +187,12 @@ void setup() {
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
   analogReadAveraging(4);   
-  /* clk inputs and switches need the pullups */
+  // clk inputs and switches -- need the pullups 
   pinMode(CLK_L, INPUT_PULLUP);
   pinMode(CLK_R, INPUT_PULLUP);
   pinMode(BUTTON_L, INPUT_PULLUP); 
   pinMode(BUTTON_R, INPUT_PULLUP); 
-  /* clk outputs */
+  // clk outputs
   pinMode(EOF_L, OUTPUT);
   pinMode(EOF_R, OUTPUT);  
   digitalWrite(EOF_L, LOW);
@@ -188,7 +201,8 @@ void setup() {
       pinMode(CS_MEM, OUTPUT);    
       digitalWriteFast(CS_MEM, HIGH);
   #endif    
-  /* audio API */
+  
+  // audio API, SD:
   AudioMemory(35);
   SPI.setMOSI(7);
   SPI.setSCK(14);
@@ -201,12 +215,12 @@ void setup() {
     }
   }
   delay(100);
-   
+  // set up TX --> atmega : 
   HWSERIAL.begin(BAUD);
   HWSERIAL.print('\n');
   delay(10);
   
-  /* zero volume while we generate the file list */
+  // zero volume while we generate the file list 
   mixL.gain(0, 0);
   mixL.gain(1, 0);
   mixL.gain(2, 0);
@@ -216,27 +230,26 @@ void setup() {
   mixR.gain(2, 0);
   mixR.gain(3, 0);
   
-  /*  get wav from SD */
+  //  get wav from SD : 
   generate_file_list();
-  /* and spi flash */
+  // and from spi flash -
   if (SPI_FLASH) SPI_FLASH_STATUS = spi_flash_init();
-  /*  update spi flash ? */
+  // update spi flash ? 
   if (!digitalRead(BUTTON_R) && SPI_FLASH_STATUS) SPI_FLASH_STATUS = spi_flash(); 
-  /*  files on spi flash ? */
+  //  files on spi flash ? 
   if (SPI_FLASH_STATUS) SPI_FLASH_STATUS = extract();
-  /*  file names */
+  //  file names :
   if (SPI_FLASH_STATUS) generate_file_list_flash();
   
-  /* begin timers and HW serial */
+  // ADC + UI timers :
   ADC_timer.begin(ADCtimerCallback, ADC_RATE); 
   UI_timer.begin(UItimerCallback, UI_RATE);
   
-  /* allocate memory for L/R + init */
+  // allocate memory for L/R + init :
   audioChannels[LEFT]  = (audioChannel*)malloc(sizeof(audioChannel));
   audioChannels[RIGHT] = (audioChannel*)malloc(sizeof(audioChannel));
   init_channels(INIT_FILE);
   
-    
   attachInterrupt(CLK_L, CLK_ISR_L, FALLING);
   attachInterrupt(CLK_R, CLK_ISR_R, FALLING);
   attachInterrupt(ENC_L1, left_encoder_ISR, CHANGE);
@@ -245,7 +258,7 @@ void setup() {
   attachInterrupt(ENC_R2, right_encoder_ISR, CHANGE);
   
   delay(10);
-   /*  calibrate mid point ? */
+  //  calibrate mid point ?
   if (!digitalRead(BUTTON_L)) calibrate(); 
   else if (EEPROM.read(0x0)==0xFF) HALFSCALE = readMIDpoint();
   else HALFSCALE = pow(2,ADC_RES-1)-1;
@@ -253,7 +266,7 @@ void setup() {
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);
  
-    /* set volume */
+  // set volume 
   mixL.gain(0, audioChannels[LEFT]->_gain);
   mixL.gain(1, audioChannels[LEFT]->_gain);
   mixL.gain(2, audioChannels[LEFT]->_gain);
@@ -263,19 +276,19 @@ void setup() {
   mixR.gain(2, audioChannels[RIGHT]->_gain);
   mixR.gain(3, audioChannels[RIGHT]->_gain);
   //info();
+  //print_wav_info();
 }
 
 /* main loop, wherein we mainly wait for the clock-flags */
 
 void loop() 
 {
-  
-  while(1) {
-
+  while(1) 
+  {
      _loop();
   } 
 }
 
-/* ------------------------------------------------------------ */
+/* ------------------------------------------------------ */
 
 

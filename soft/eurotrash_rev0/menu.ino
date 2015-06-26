@@ -4,11 +4,11 @@
 *
 */
 
-#define MAXFILES 128                 // we don't allow more than 128 files (for no particular reason); 
-uint8_t FILECOUNT;
-uint8_t RAW_FILECOUNT;
-const uint8_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
-const uint8_t NAME_LEN = 13;         // 8.3
+const uint16_t MAXFILES = 128;        // we don't allow more than 128 files (for no particular reason); 
+uint16_t FILECOUNT;
+uint16_t RAW_FILECOUNT;
+const uint16_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
+const uint16_t NAME_LEN = 13;         // 8.3
 /* misc arrays */
 char FILES[MAXFILES][NAME_LEN];              // file name, SD
 uint32_t RAW_FILE_ADR[MAXFILES+0x1];   // file adr, SPI
@@ -23,14 +23,14 @@ enum {
    _FLASH
 };
 
-float DEFAULT_GAIN = 0.6;            // adjust default volume [0.0 - 1.0]
-uint8_t ENCODER_SWAP, DIR;           // alternate reading the encoders
-const uint8_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
+float DEFAULT_GAIN = 0.6;             // adjust default volume [0.0 - 1.0]
+uint16_t ENCODER_SWAP, DIR;           // alternate reading the encoders
+const uint16_t CTRL_RESOLUTION = 100; // ctrl resolution (encoders), relative to file size; adjust to your liking (< 9999)
 const float   CTRL_RESOLUTION_INV = 1.0f/(float)CTRL_RESOLUTION;
 int16_t prev_encoderdata[]  = {-999, -999};
 
-uint8_t MENU_PAGE[CHANNELS] = {0,0};
-uint8_t filedisplay[CHANNELS];
+uint16_t MENU_PAGE[CHANNELS] = {0,0};
+uint16_t filedisplay[CHANNELS];
 
 // misc messages 
 const char *_SAVE = "    save?";
@@ -71,9 +71,9 @@ enum {
   FLASHING
 };
 
-uint32_t LASTBUTTON_EVENT =0 ;
-uint8_t  SWAP_BUTTON = 0;
-uint8_t  STATE_B[] = {0,0}, EVENT_B[] ={0,0};
+uint32_t _TIMESTAMP_BUTTON_EVENT =0 ;
+uint16_t  SWAP_BUTTON = 0;
+uint16_t  STATE_B[] = {0,0}, EVENT_B[] ={0,0};
 const uint16_t LONGPRESSED = 800;
   
 /* --------------------------------------------------- */
@@ -91,7 +91,7 @@ void right_encoder_ISR() {
 void update_enc() {
   
   int16_t encoderdata;
-  uint8_t _channel = ENCODER_SWAP;
+  uint16_t _channel = ENCODER_SWAP;
   ENCODER_SWAP = ~_channel & 1u; // toggle L/R
    
   if (encoder[_channel].change()) { 
@@ -102,39 +102,39 @@ void update_enc() {
 
 void update_buttons() {
   
-   if (!digitalReadFast(BUTTON_L) && !STATE_B[LEFT]  && (millis() - LASTBUTTON > DEBOUNCE))  { 
+   if (!digitalReadFast(BUTTON_L) && !STATE_B[LEFT]  && (millis() - _TIMESTAMP_BUTTON > DEBOUNCE))  { 
        
       STATE_B[LEFT]  = PRESSED;
-      LASTBUTTON_EVENT = millis(); 
+      _TIMESTAMP_BUTTON_EVENT = millis(); 
  
    }
-   if (!digitalReadFast(BUTTON_R) && !STATE_B[RIGHT] && (millis() - LASTBUTTON > DEBOUNCE))  {
+   if (!digitalReadFast(BUTTON_R) && !STATE_B[RIGHT] && (millis() - _TIMESTAMP_BUTTON > DEBOUNCE))  {
      
       STATE_B[RIGHT] = PRESSED;
-      LASTBUTTON_EVENT = millis(); 
+      _TIMESTAMP_BUTTON_EVENT = millis(); 
    }
 }
 
 void process_buttons() {
   
       
-  uint8_t _button = ~SWAP_BUTTON & 1u;
+  uint16_t _button = ~SWAP_BUTTON & 1u;
   SWAP_BUTTON = _button;
       
   if (STATE_B[_button]) {
    
-        uint8_t _b; 
+        uint16_t _b; 
         if (_button == LEFT) _b = digitalReadFast(BUTTON_L);
         else _b = digitalReadFast(BUTTON_R);
       
         if (_b && STATE_B[_button] == PRESSED)  EVENT_B[_button] = SHORT;
-        else if (STATE_B[_button] == PRESSED && millis() - LASTBUTTON_EVENT > LONGPRESSED) EVENT_B[_button] = HOLD;
+        else if (STATE_B[_button] == PRESSED && millis() - _TIMESTAMP_BUTTON_EVENT > LONGPRESSED) EVENT_B[_button] = HOLD;
         else if (_b && EVENT_B[_button] == DONE)  STATE_B[_button] = READY;
       
         if (EVENT_B[_button] == SHORT) { 
           buttons(_button);
           STATE_B[_button] = EVENT_B[_button] = DONE;
-          LASTBUTTON = millis(); 
+          _TIMESTAMP_BUTTON = millis(); 
         }
         else if (EVENT_B[_button] == HOLD) {
           // switch banks ?
@@ -154,21 +154,21 @@ void process_buttons() {
                 
           }  
           EVENT_B[_button] = STATE_B[_button] = DONE; 
-          LASTBUTTON = millis(); 
+          _TIMESTAMP_BUTTON = millis(); 
       }
    }
 }
 /* --------------------------------------------------------------- */
 
-void buttons(uint8_t _channel) {
+void buttons(uint16_t _channel) {
   
-  uint8_t _ch = _channel;
+  uint16_t _ch = _channel;
   
   switch (MENU_PAGE[_ch]) {
     
   case FILESELECT: { // update file  
   
-          uint8_t _file = audioChannels[_ch]->file_wav;
+          uint16_t _file = audioChannels[_ch]->file_wav;
           if (filedisplay[_ch] != _file) update_channel(audioChannels[_ch]); // select new file
           else { // go to next page
               MENU_PAGE[_ch] = STARTPOS;
@@ -191,7 +191,7 @@ void buttons(uint8_t _channel) {
   case ENDPOS: { // end pos
   
           MENU_PAGE[_ch] = FILESELECT;
-          int8_t _file = audioChannels[_ch]->file_wav;
+          int16_t _file = audioChannels[_ch]->file_wav;
           encoder[_channel].setPos(_file);
           update_display(_ch, _file);
           break; 
@@ -217,8 +217,8 @@ void buttons(uint8_t _channel) {
 
 void update_channel(struct audioChannel* _ch) {
         
-        uint8_t _id   = _ch->id;          // L or R ?
-        uint8_t _file = filedisplay[_id]; // file #
+        uint16_t _id   = _ch->id;          // L or R ?
+        uint16_t _file = filedisplay[_id]; // file #
         _ch->file_wav = _file;            // select file
         update_display(_id, _file);       // update menu
         _ch->_open = false;               // close prev files
@@ -248,13 +248,13 @@ void update_display(uint8_t _channel, uint16_t _newval) {
   
  char msg[DISPLAY_LEN+1];
  int16_t tmp = _newval;
- uint8_t _bank = audioChannels[_channel]->bank;
+ uint16_t _bank = audioChannels[_channel]->bank;
  char cmd = 0x02;      // this is the cmd byte / prefix for the Serial messages (ascii starting at 0x02).
  
  switch (MENU_PAGE[_channel]) {
    
      case FILESELECT: { // file
-           uint8_t   max_f = (_bank == _SD) ? (FILECOUNT-1) : (RAW_FILECOUNT-1);
+           uint16_t max_f = (_bank == _SD) ? (FILECOUNT-1) : (RAW_FILECOUNT-1);
            if (tmp < 0)  {
                  tmp = max_f; 
                  encoder[_channel].setPos(max_f); 
@@ -338,22 +338,22 @@ void update_display(uint8_t _channel, uint16_t _newval) {
 
 /* --------------------------------------------------------------- */
 
-void _UI() {
-  
-       update_enc();
-       update_buttons();
-       process_buttons();
-       UI = false;
-     }
+void _UI() 
+{
+  update_enc();
+  update_buttons();
+  process_buttons();
+  UI = false;
+}
      
 /* --------------------------------------------------------------- */
 
-void _adc() {
- 
-       _ADC = false;
-       ADC_cycle++;
-       if (ADC_cycle >= numADC)  ADC_cycle = 0; 
-       CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
-       update_eof(ADC_cycle);
+void _adc() 
+{
+  _ADC = false;
+  ADC_cycle++;
+  if (ADC_cycle >= numADC) ADC_cycle = 0;
+  CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
+  update_eof(ADC_cycle);
 }  
 

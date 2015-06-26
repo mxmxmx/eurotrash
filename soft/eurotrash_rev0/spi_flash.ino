@@ -12,7 +12,7 @@
 #define _OFFSET 0x6                    // file # in bytes 0,1
 #define INFO_ADR 0x0                   // info adr.
 
-uint8_t _EXT = false;
+uint16_t _EXT = false;
 
 /*  ======================================== */
 
@@ -124,7 +124,7 @@ uint8_t spi_flash(){
     delay(1000);
     MENU_PAGE[LEFT]  = FILESELECT; 
     MENU_PAGE[RIGHT] = FILESELECT; 
-    LASTBUTTON = millis(); 
+    _TIMESTAMP_BUTTON = millis(); 
     return _files;
 }
 

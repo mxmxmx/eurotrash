@@ -6,7 +6,7 @@
 
 void init_channels(uint8_t f) {
   
-  uint8_t _file = f;
+  uint16_t _file = f;
   for (int i = 0; i < CHANNELS; i ++) {
         
         audioChannels[i]->id = i;
@@ -79,7 +79,11 @@ void _play(struct audioChannel* _channel) {
         _swap = ~_swap & 1u;
         fade[_swap + _id*CHANNELS + _bank*0x4]->fadeOut(FADE_OUT); // ?
         _channel->swap = _swap;
-        !_id ? PAUSE_FILE_L = true : PAUSE_FILE_R = true;
+        
+        if (_channel->_open == 1) { // # files open ?
+            _channel->_open++; 
+            !_id ? PAUSE_FILE_L = true : PAUSE_FILE_R = true;
+        }
 }
  
 /* =============================================== */
@@ -91,8 +95,8 @@ void eof_left() {
   
    if (millis() - _LCLK_TIMESTAMP > audioChannels[LEFT]->eof) {
   
-        uint8_t  _bank = audioChannels[LEFT]->bank;
-        uint8_t  _swap = ~audioChannels[LEFT]->swap & 1u;
+        uint16_t  _bank = audioChannels[LEFT]->bank;
+        uint16_t  _swap = ~audioChannels[LEFT]->swap & 1u;
       
         digitalWriteFast(EOF_L, HIGH); 
         
@@ -109,8 +113,8 @@ void eof_right() {
   
     if (millis() - _RCLK_TIMESTAMP > audioChannels[RIGHT]->eof) {
        
-        uint8_t  _bank = audioChannels[RIGHT]->bank;
-        uint8_t  _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS; 
+        uint16_t  _bank = audioChannels[RIGHT]->bank;
+        uint16_t  _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS; 
           
         digitalWriteFast(EOF_R, HIGH);  
             
@@ -151,7 +155,8 @@ void _pause_inactive_L() { // pause voice that's no longer playing
     if (millis() - _LCLK_TIMESTAMP > FADE_OUT) { 
    
         uint16_t _swap = audioChannels[LEFT]->swap & 1u;
-        wav[_swap]->pause(); 
+        wav[_swap]->pause();
+        audioChannels[LEFT]->_open--; // # open files
         PAUSE_FILE_L = false; 
      }   
 }
@@ -162,6 +167,7 @@ void _pause_inactive_R() {
    
         uint16_t _swap = (audioChannels[RIGHT]->swap & 1u) + CHANNELS;
         wav[_swap]->pause();  
+        audioChannels[RIGHT]->_open--; // # open files
         PAUSE_FILE_R = false; 
      } 
 }
@@ -174,19 +180,20 @@ void _open_next(struct audioChannel* _channel) {
       
          uint16_t  _id, _file;
      
-         _file = _channel->file_wav;
          _id   = _channel->id*CHANNELS;
-         //  update channel data: 
-         _channel->ctrl_res = CTRL_RES[_file];
-         _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
-      
+         _file = _channel->file_wav;
+         const char *_file_name = FILES[_file];
+         
          // close files : 
          wav[_id]->close();     
          wav[_id+0x1]->close(); 
-         // open new files :  
-         const char *thisfile = FILES[_file];
-         wav[_id]->open(thisfile);
-         wav[_id+0x1]->open(thisfile);
+         // open new files : 
+         wav[_id]->open(_file_name);
+         wav[_id+0x1]->open(_file_name);
+         
+         //  update channel data: 
+         _channel->ctrl_res = CTRL_RES[_file];
+         _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
          _channel->swap  = 0x0;   // reset
          _channel->_open = 0x1;   // play
     }
@@ -208,21 +215,21 @@ void _open_next(struct audioChannel* _channel) {
 
 void generate_file_list() {  // to do - sort alphabetically?
   
-  uint8_t len;
+  uint16_t len;
   uint32_t file_len, file_len_ms;
   char tmp[DISPLAY_LEN];
   File thisfile;
   root = SD.open("/");
+  thisfile = root.openNextFile(); 
   
-  thisfile = root.openNextFile(O_RDONLY);  
   while (thisfile && FILECOUNT < MAXFILES) {
               char* _name = thisfile.name(); 
               // wav files ?  
               len = strlen(_name) - 4; 
+ 
               if  (!strcmp(&_name[len-2], "~1.WAV")) delay(2); // skip crap
               else if  (_name[0] == '_') delay(2);             // skip crap
               else if (!strcmp(&_name[len], ".WAV")) {
-    
                       memcpy(FILES[FILECOUNT], _name, NAME_LEN);
                       /* this is annoying */
                       wav1.play(_name);
@@ -246,9 +253,9 @@ void generate_file_list() {  // to do - sort alphabetically?
                       }
                       memcpy(DISPLAYFILES[FILECOUNT], tmp, sizeof(tmp));
                       FILECOUNT++;
-              }    
-             thisfile.close();
-             thisfile = root.openNextFile(O_RDONLY);
+               }    
+               thisfile.close();
+               thisfile = root.openNextFile(); 
    }   
   root.rewindDirectory(); 
   root.close();
@@ -314,7 +321,7 @@ void calibrate() {
       delay(1000);
       MENU_PAGE[LEFT]  = FILESELECT; 
       MENU_PAGE[RIGHT] = FILESELECT; 
-      LASTBUTTON = millis(); 
+      _TIMESTAMP_BUTTON = millis(); 
 } 
 
 /* =============================================== */
@@ -343,4 +350,22 @@ uint16_t readMIDpoint() {
        
        return  (uint16_t)(byte0 << 8) + byte1;
 }  
+
+/* =============================================== */
+
+void print_wav_info() {
+  
+  Serial.println(" ");
+  int x = FILECOUNT;
+  while (x) {
+    x--;
+    Serial.print(DISPLAYFILES[x]);
+    Serial.print(" <-- ");
+    Serial.println(FILES[x]);
+  }
+  Serial.println("");
+  Serial.print("total: # "); Serial.println(FILECOUNT);
+  // to do: file len, ctrl res etc: FILE_LEN[MAXFILES*2]; etc 
+  Serial.println("ok");
+}
 

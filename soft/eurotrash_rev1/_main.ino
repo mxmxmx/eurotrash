@@ -1,8 +1,8 @@
 
 // main loop : 
 
-void _loop() {
- 
+void _loop() 
+{ 
      leftright();
      // fade out voice ?
      if (!FADE_LEFT) eof_left();  
@@ -39,6 +39,5 @@ void _loop() {
      
      leftright();
      // pause streaming ? (inactive voice)
-     if (PAUSE_FILE_R) _pause_inactive_R();  
-  
+     if (PAUSE_FILE_R) _pause_inactive_R();   
 }

@@ -20,12 +20,12 @@ void _loop()
      if (_ADC) _adc();             
    
      leftright();
-     // end-of-file trigger ? 
-     if (_EOF_L_OFF) _EOF_L();   
+     // end-of-file / pause file ? 
+     if (_EOF_L_OFF) _PAUSE_EOF_L();   
    
      leftright();
-     // end-of-file trigger ?  
-     if (_EOF_R_OFF) _EOF_R();  
+     // end-of-file / pause file ?  
+     if (_EOF_R_OFF) _PAUSE_EOF_R();  
      
      leftright();
      // new file ?

@@ -26,8 +26,13 @@ enum { // bank
 enum { // channel state
   
   _STOP,
-  _PLAY
+  _PLAY,
+  _PAUSE, 
+  _RETRIG
 };
+
+const uint16_t _WAIT = 100;          // channel wait state (ms)
+
 
 float DEFAULT_GAIN = 0.6;             // adjust default volume [0.0 - 1.0]
 uint16_t ENCODER_SWAP, DIR;           // alternate reading the encoders

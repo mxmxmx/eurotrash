@@ -97,7 +97,6 @@ const uint16_t FADE_OUT = 100;       // fade out (ditto)
 const uint16_t FADE_IN_RAW  = 1;     // fade in  / flash
 const uint16_t _FADE_F_CHANGE = 300; // fade out / file change 
 
-
 uint32_t _FADE_TIMESTAMP_F_CHANGE = 0;
 
 uint16_t FADE_LEFT, FADE_RIGHT, _EOF_L_OFF, _EOF_R_OFF;

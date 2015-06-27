@@ -11,7 +11,7 @@ const uint16_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
 const uint16_t NAME_LEN = 13;         // 8.3
 /* misc arrays */
 char FILES[MAXFILES][NAME_LEN];              // file name, SD
-uint32_t RAW_FILE_ADR[MAXFILES+0x1];   // file adr, SPI
+uint32_t RAW_FILE_ADR[MAXFILES+0x1];         // file adr, SPI
 char DISPLAYFILES[MAXFILES][NAME_LEN];       // display for SD
 char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];   // display for spi flash
 
@@ -255,7 +255,8 @@ void value_to_msg(char* _msg, int16_t _num) {
  
     char msg[] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0' };
      
-    if (_num > 99)      sprintf(msg+6, "%d", _num); 
+    if (_num > 999)     sprintf(msg+5, "%d", _num);  
+    else if (_num > 99) sprintf(msg+6, "%d", _num); 
     else if (_num > 9)  sprintf(msg+7, "%d", _num); 
     else if (_num >= 0) sprintf(msg+8, "%d", _num); 
     
@@ -372,7 +373,7 @@ void _adc()
 {
   _ADC = false;
   ADC_cycle++;
-  if (ADC_cycle >= numADC) ADC_cycle = 0;
+  if (ADC_cycle >= numADC)  ADC_cycle = 0; 
   CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
   update_eof(ADC_cycle);
 }  

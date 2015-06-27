@@ -11,7 +11,7 @@ void init_channels(uint8_t f) {
         
         audioChannels[i]->id = i;
         audioChannels[i]->file_wav = _file;
-        audioChannels[i]->_open = 0;
+        audioChannels[i]->state = _STOP;
         audioChannels[i]->pos0 = 0;
         audioChannels[i]->posX = CTRL_RESOLUTION;
         audioChannels[i]->srt = 0;
@@ -29,17 +29,15 @@ void init_channels(uint8_t f) {
 void leftright() {
   
  if (LCLK) {  // clock?
-  
-       if (audioChannels[LEFT]->_open)  _play(audioChannels[LEFT]); 
-       LCLK = false;
-       FADE_LEFT = false;
+ 
+       if (audioChannels[LEFT]->state)  _play(audioChannels[LEFT]); 
+       LCLK = FADE_LEFT = false;
        _LCLK_TIMESTAMP = millis();
   } 
   if (RCLK) { // clock?
  
-       if (audioChannels[RIGHT]->_open) _play(audioChannels[RIGHT]);
-       RCLK = false;
-       FADE_RIGHT = false;
+       if (audioChannels[RIGHT]->state) _play(audioChannels[RIGHT]);
+       RCLK = FADE_RIGHT = false;
        _RCLK_TIMESTAMP = millis();
    } 
 }
@@ -53,9 +51,9 @@ void _play(struct audioChannel* _channel) {
       
       _swap   = _channel->swap;   
       _bank   = _channel->bank;     
-      _id     = _channel->id; 
+      _id     = _channel->id*CHANNELS; 
       
-      _numVoice = _swap + _id*CHANNELS;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
+      _numVoice = _swap + _id;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
       
       _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
       _startPos += _channel->pos0;                    // manual offset  
@@ -65,7 +63,7 @@ void _play(struct audioChannel* _channel) {
       _startPos *= _channel->ctrl_res;                // scale => bytes / frames
      
        if (_bank) {
-            _channel->srt = 0x00;                     // actually, don't remember start pos (this doesn't work properly for short files / integers)
+            _channel->srt = 0x00;                     // actually, don't remember start pos (doesn't work properly for short files (?))
             uint16_t _file   = _channel->file_wav;
             fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
             const unsigned int f_adr = RAW_FILE_ADR[_file]; 
@@ -75,24 +73,16 @@ void _play(struct audioChannel* _channel) {
              fade[_numVoice]->fadeIn(FADE_IN);
              wav[_numVoice]->seek(_startPos>>9);    
        }   
-       /*  swap file and fade out previous file: */  
+       // swap file and fade out previous file :
         _swap = ~_swap & 1u;
-        fade[_swap + _id*CHANNELS + _bank*0x4]->fadeOut(FADE_OUT); // ?
+        fade[_swap + _id + _bank*0x4]->fadeOut(FADE_OUT); 
         _channel->swap = _swap;
-        
-        if (_channel->_open == 1) { // # files open ?
-            _channel->_open++; 
-            !_id ? PAUSE_FILE_L = true : PAUSE_FILE_R = true;
-        }
 }
  
 /* =============================================== */
 
 void eof_left() {
-    
-   // uint16_t _swap = ~audioChannels[LEFT]->swap & 1u;
-   // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
-  
+
    if (millis() - _LCLK_TIMESTAMP > audioChannels[LEFT]->eof) {
   
         uint16_t  _bank = audioChannels[LEFT]->bank;
@@ -102,14 +92,11 @@ void eof_left() {
         
         fade[_swap+_bank*0x4]->fadeOut(FADE_OUT); 
         _EOF_L_TIMESTAMP = millis();
-        EOF_L_OFF = FADE_LEFT = true;
+        _EOF_L_OFF = FADE_LEFT = true;
      }  
 }
 
 void eof_right() {
-  
-    // uint16_t _swap = ~audioChannels[RIGHT]->swap & 1u;
-    // uint32_t _pos  = _bank ? raw[_swap]->position() : wav[_swap]->positionBytes();
   
     if (millis() - _RCLK_TIMESTAMP > audioChannels[RIGHT]->eof) {
        
@@ -120,56 +107,30 @@ void eof_right() {
             
         fade[_swap+_bank*0x4]->fadeOut(FADE_OUT);      
         _EOF_R_TIMESTAMP = millis();
-        EOF_R_OFF = FADE_RIGHT = true;
+        _EOF_R_OFF = FADE_RIGHT = true;
      } 
 }
 
 /* =============================================== */
 
-void _pause_active_L() { // pause voice that's playing
+void _EOF_L() { // this should pause the file, too.
 
     if (millis() - _EOF_L_TIMESTAMP > FADE_OUT) { 
   
-        digitalWriteFast(EOF_L, LOW);  
         uint16_t _swap = ~audioChannels[LEFT]->swap & 1u;
-        wav[_swap]->pause(); 
-        EOF_L_OFF = false; 
+        digitalWriteFast(EOF_L, LOW);  
+        _EOF_L_OFF = false;
      }  
 }
 
-void _pause_active_R() {
+void _EOF_R() {
   
      if (millis() - _EOF_R_TIMESTAMP > FADE_OUT) { 
-  
+       
+        uint16_t _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS;  
         digitalWriteFast(EOF_R, LOW);  
-        uint16_t _swap = (~audioChannels[RIGHT]->swap & 1u) + CHANNELS;
-        wav[_swap]->pause();  
-        EOF_R_OFF = false; 
+        _EOF_R_OFF = false; 
      }  
-}
-
-/* =============================================== */
-
-void _pause_inactive_L() { // pause voice that's no longer playing
-
-    if (millis() - _LCLK_TIMESTAMP > FADE_OUT) { 
-   
-        uint16_t _swap = audioChannels[LEFT]->swap & 1u;
-        wav[_swap]->pause();
-        audioChannels[LEFT]->_open ? audioChannels[LEFT]->_open-- : audioChannels[LEFT]->_open; // # open files
-        PAUSE_FILE_L = false; 
-     }   
-}
-
-void _pause_inactive_R() { 
- 
-     if (millis() - _RCLK_TIMESTAMP > FADE_OUT) { 
-   
-        uint16_t _swap = (audioChannels[RIGHT]->swap & 1u) + CHANNELS;
-        wav[_swap]->pause();  
-        audioChannels[RIGHT]->_open ? audioChannels[RIGHT]->_open-- : audioChannels[RIGHT]->_open; // # open files
-        PAUSE_FILE_R = false; 
-     } 
 }
 
 /* =============================================== */
@@ -194,8 +155,8 @@ void _open_next(struct audioChannel* _channel) {
          //  update channel data: 
          _channel->ctrl_res = CTRL_RES[_file];
          _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
-         _channel->swap  = 0x0;   // reset
-         _channel->_open = 0x1;   // play
+         _channel->swap  = 0x0;     // reset
+         _channel->state = _PLAY;  
     }
     
     else if (_channel->bank) {  // SPI flash 
@@ -207,7 +168,8 @@ void _open_next(struct audioChannel* _channel) {
          // update channel data: 
          _channel->ctrl_res = CTRL_RES[_file + MAXFILES];
          _channel->ctrl_res_eof = CTRL_RES_EOF[_file + MAXFILES]; 
-         _channel->_open = 0x1; 
+         _channel->swap  = 0x0;     // reset
+         _channel->state = _PLAY; 
     }
 }
 

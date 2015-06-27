@@ -20,24 +20,18 @@ void _loop()
      if (_ADC) _adc();             
    
      leftright();
-     // end-of-file ? pause streaming 
-     if (EOF_L_OFF) _pause_active_L();   
+     // end-of-file trigger ? 
+     if (_EOF_L_OFF) _EOF_L();   
    
      leftright();
-     // end-of-file ? pause streaming 
-     if (EOF_R_OFF) _pause_active_R();  
+     // end-of-file trigger ?  
+     if (_EOF_R_OFF) _EOF_R();  
      
      leftright();
      // new file ?
-     if (!audioChannels[LEFT]->_open)  _open_next(audioChannels[LEFT]); 
+     if (!audioChannels[LEFT]->state)  _open_next(audioChannels[LEFT]); 
      
      leftright();
      // new file ?
-     if (!audioChannels[RIGHT]->_open) _open_next(audioChannels[RIGHT]); 
-     // pause streaming ? (inactive voice) 
-     if (PAUSE_FILE_L) _pause_inactive_L(); 
-     
-     leftright();
-     // pause streaming ? (inactive voice)
-     if (PAUSE_FILE_R) _pause_inactive_R();   
+     if (!audioChannels[RIGHT]->state) _open_next(audioChannels[RIGHT]);  
 }

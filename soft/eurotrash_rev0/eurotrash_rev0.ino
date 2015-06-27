@@ -75,7 +75,7 @@ typedef struct audioChannel {
   
     uint16_t    id;            // channel L/R
     uint16_t    file_wav;      // fileSelect
-    int16_t     _open;         // files open ?
+    uint16_t    state;         // channel state
     uint32_t    pos0;          // file start pos manual
     uint32_t    posX;          // end pos
     uint32_t    srt;           // start pos
@@ -100,7 +100,7 @@ const uint16_t _FADE_F_CHANGE = 300; // fade out / file change
 
 uint32_t _FADE_TIMESTAMP_F_CHANGE = 0;
 
-uint16_t FADE_LEFT, FADE_RIGHT, EOF_L_OFF, EOF_R_OFF, PAUSE_FILE_L, PAUSE_FILE_R;
+uint16_t FADE_LEFT, FADE_RIGHT, _EOF_L_OFF, _EOF_R_OFF;
 uint32_t _LCLK_TIMESTAMP, _RCLK_TIMESTAMP, _EOF_L_TIMESTAMP, _EOF_R_TIMESTAMP; // trigger + E-o-F timestamps
 
 uint16_t SPI_FLASH_STATUS = 0;

@@ -18,9 +18,15 @@ char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];   // display for spi flash
 uint32_t CTRL_RES[MAXFILES*CHANNELS];
 uint32_t CTRL_RES_EOF[MAXFILES*CHANNELS];
 
-enum {
+enum { // bank
    _SD, 
    _FLASH
+};
+
+enum { // channel state
+  
+  _STOP,
+  _PLAY
 };
 
 float DEFAULT_GAIN = 0.6;             // adjust default volume [0.0 - 1.0]
@@ -219,10 +225,20 @@ void update_channel(struct audioChannel* _ch) {
         
         uint16_t _id   = _ch->id;          // L or R ?
         uint16_t _file = filedisplay[_id]; // file #
-        _ch->file_wav = _file;            // select file
-        update_display(_id, _file);       // update menu
-        _ch->_open = false;               // close prev files
+        _ch->file_wav = _file;             // select file
+        update_display(_id, _file);        // update menu
+        _ch->state = _STOP;                // pause channel
         
+        if (!_id) {
+             
+             _EOF_L_OFF = false;
+             FADE_LEFT = true;
+        } 
+        else {
+          
+             _EOF_R_OFF = false;
+             FADE_RIGHT = true;
+        }
         fade[_id*CHANNELS]->fadeOut(_FADE_F_CHANGE);
         fade[_id*CHANNELS+0x1]->fadeOut(_FADE_F_CHANGE);
         _FADE_TIMESTAMP_F_CHANGE = millis();

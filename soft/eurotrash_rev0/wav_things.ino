@@ -53,9 +53,9 @@ void _play(struct audioChannel* _channel) {
       _swap   = _channel->swap;   
       _state  = _channel->state;
       _bank   = _channel->bank;     
-      _id     = _channel->id*CHANNELS; 
+      _id     = _channel->id; 
       
-      _numVoice = _swap + _id;               // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
+      _numVoice = _swap + _id*CHANNELS; // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
       
       _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
       _startPos += _channel->pos0;                    // manual offset  
@@ -64,20 +64,20 @@ void _play(struct audioChannel* _channel) {
       _channel->srt = _startPos;                      // remember start pos        
       _startPos *= _channel->ctrl_res;                // scale => bytes / frames
      
-       if (_bank) {
-            _channel->srt = 0x00;                     // actually, don't remember start pos - doesn't work properly for short files.
+       if (_bank) { // spi flash
+            _channel->srt = 0x00; // hack
             uint16_t _file   = _channel->file_wav;
             fade[_numVoice+0x4]->fadeIn(FADE_IN_RAW);
             const unsigned int f_adr = RAW_FILE_ADR[_file]; 
             raw[_numVoice]->seek(f_adr, _startPos);
        }
-       else {
+       else { // SD
              fade[_numVoice]->fadeIn(FADE_IN);
              wav[_numVoice]->seek(_startPos>>9);    
        }   
        // swap file and fade out previous file :
         _swap = ~_swap & 1u;
-        fade[_swap + _id + _bank*0x4]->fadeOut(FADE_OUT); 
+        fade[_swap + _id*CHANNELS + _bank*0x4]->fadeOut(FADE_OUT); 
         _channel->swap = _swap;     
         _channel->state = (_state == _PLAY) ? _PAUSE : _RETRIG; 
 }
@@ -288,6 +288,7 @@ void calibrate() {
       
       HALFSCALE = average / 800.0f;
       update_display(LEFT,  HALFSCALE);
+      Serial.println(HALFSCALE);
       delay(500);
       update_display(RIGHT, HALFSCALE);
       // do we want to save the value?

@@ -12,6 +12,7 @@ const uint16_t NAME_LEN = 13;         // 8.3
 /* misc arrays */
 char FILES[MAXFILES][NAME_LEN];              // file name, SD
 uint32_t RAW_FILE_ADR[MAXFILES+0x1];         // file adr, SPI
+//uint16_t SD_FILE_INDEX[MAXFILES];            // SD file indices
 char DISPLAYFILES[MAXFILES][NAME_LEN];       // display for SD
 char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];   // display for spi flash
 

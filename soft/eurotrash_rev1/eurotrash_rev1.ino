@@ -26,7 +26,6 @@
 #include <rotaryplus.h> 
 #include <play_rawflash15.h> // change to <play_rawflash15.h> if using rev1 boards
 
-
 #define HWSERIAL Serial1 // >> atmega328, expected baudrate is 115200
 #define BAUD 115200
 File root;
@@ -185,7 +184,7 @@ void setup() {
   //while (!Serial) {;}  
   analogReference(EXTERNAL);
   analogReadRes(ADC_RES);
-  analogReadAveraging(4);   
+  analogReadAveraging(16);   
   // clk inputs and switches -- need the pullups 
   pinMode(CLK_L, INPUT_PULLUP);
   pinMode(CLK_R, INPUT_PULLUP);

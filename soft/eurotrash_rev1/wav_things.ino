@@ -155,7 +155,7 @@ void _PAUSE_EOF_R() {
 
 /* =============================================== */
 
-void _open_next(struct audioChannel* _channel) {
+void _open_new(struct audioChannel* _channel) {
   
      if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
       
@@ -181,10 +181,7 @@ void _open_next(struct audioChannel* _channel) {
     
     else if (_channel->bank) {  // SPI flash 
       
-         uint16_t _id, _file;
-    
-         _file = _channel->file_wav;
-         _id   = _channel->id*CHANNELS;  
+         uint16_t _file = _channel->file_wav;
          // update channel data: 
          _channel->ctrl_res = CTRL_RES[_file + MAXFILES];
          _channel->ctrl_res_eof = CTRL_RES_EOF[_file + MAXFILES]; 
@@ -202,27 +199,30 @@ void generate_file_list() {  // to do - sort alphabetically?
   char tmp[DISPLAY_LEN];
   File thisfile;
   root = SD.open("/");
-  thisfile = root.openNextFile(); 
-  
+  thisfile = root.openNextFile();
+
   while (thisfile && FILECOUNT < MAXFILES) {
-              char* _name = thisfile.name(); 
+    
+              char* _name = thisfile.name();           
               // wav files ?  
               len = strlen(_name) - 4; 
  
               if  (!strcmp(&_name[len-2], "~1.WAV")) delay(2); // skip crap
               else if  (_name[0] == '_') delay(2);             // skip crap
               else if (!strcmp(&_name[len], ".WAV")) {
+                
                       memcpy(FILES[FILECOUNT], _name, NAME_LEN);
-                      /* this is annoying */
+                      //uint16_t _index = SD.returnFileIndex(_name);
+                      //SD_FILE_INDEX[FILECOUNT] = _index;
                       wav1.play(_name);
-                      delay(15);
+                      delay(10); // delay until update();
                       file_len = (float)wav1.lengthBytes() * 0.9f;
              
                       CTRL_RES[FILECOUNT]  = file_len * CTRL_RESOLUTION_INV;       // ctrl resolution pos0/bytes
                       file_len_ms = wav1.lengthMillis();
                       CTRL_RES_EOF[FILECOUNT] = file_len_ms * CTRL_RESOLUTION_INV; // ctrl resolution posX/bytes
                       wav1.stop();
-                      /* for the display, get rid of .wav extension + right justify */
+                      // for the display, get rid of .wav extension + right justify 
                       int8_t justify = DISPLAY_LEN - len;
                       if (justify < 0) justify = 0; 
                       for (int i = justify; i < DISPLAY_LEN; i++) {  
@@ -235,10 +235,10 @@ void generate_file_list() {  // to do - sort alphabetically?
                       }
                       memcpy(DISPLAYFILES[FILECOUNT], tmp, sizeof(tmp));
                       FILECOUNT++;
-               }    
+               }
                thisfile.close();
                thisfile = root.openNextFile(); 
-   }   
+  }   
   root.rewindDirectory(); 
   root.close();
 }

@@ -1,5 +1,5 @@
 
-// main loop : 
+/*  main loop  */ 
 
 void _loop() 
 { 
@@ -29,9 +29,9 @@ void _loop()
      
      leftright();
      // new file ?
-     if (!audioChannels[LEFT]->state)  _open_next(audioChannels[LEFT]); 
+     if (!audioChannels[LEFT]->state)  _open_new(audioChannels[LEFT]); 
      
      leftright();
      // new file ?
-     if (!audioChannels[RIGHT]->state) _open_next(audioChannels[RIGHT]);  
+     if (!audioChannels[RIGHT]->state) _open_new(audioChannels[RIGHT]);  
 }

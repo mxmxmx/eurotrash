@@ -138,9 +138,9 @@ uint16_t SPI_FLASH_STATUS = 0;
 #define numADC 4
 #define ADC_RES 12
 
-int16_t CV[numADC];
+int16_t  _cv[numADC];
 uint16_t ADC_cycle;
-uint16_t HALFSCALE = 0; 
+uint16_t _MIDPOINT = 0x0; 
 
 /* encoders */ 
 Rotary encoder[2] = {{ENC_L1, ENC_L2}, {ENC_R1, ENC_R2}}; 
@@ -258,8 +258,8 @@ void setup() {
   delay(10);
   //  calibrate mid point ?
   if (!digitalRead(BUTTON_L)) calibrate(); 
-  else if (EEPROM.read(0x0)==0xFF) HALFSCALE = readMIDpoint();
-  else HALFSCALE = pow(2,ADC_RES-1)-1;
+  else if (EEPROM.read(0x0)==0xFF) _MIDPOINT = readMIDpoint();
+  else _MIDPOINT = pow(2,ADC_RES-1)-1;
   
   update_display(LEFT,  INIT_FILE);
   update_display(RIGHT, INIT_FILE);

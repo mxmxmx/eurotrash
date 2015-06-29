@@ -372,10 +372,38 @@ void _UI()
 
 void _adc() 
 {
-  _ADC = false;
-  ADC_cycle++;
-  if (ADC_cycle >= numADC)  ADC_cycle = 0; 
-  CV[ADC_cycle] = analogRead(ADC_cycle+0x10);
+  _ADC = false; 
+  
+  ADC_cycle = (ADC_cycle++ >= 0x3) ? 0x0 : ADC_cycle; 
+  _cv[ADC_cycle] = (_MIDPOINT - analogRead(ADC_cycle+0x10)) >> 0x5;  
   update_eof(ADC_cycle);
+}
+
+/* --------------------------------------------------------------- */
+
+void writeMIDpoint(uint16_t _val) 
+{   
+  uint8_t byte0, byte1, adr = 0;
+       
+  byte0 = _val >> 0x8;
+  byte1 = _val;
+  EEPROM.write(adr, 0xFF);
+  adr++;
+  EEPROM.write(adr, byte0);
+  adr++;
+  EEPROM.write(adr, byte1);
 }  
 
+/* --------------------------------------------------------------- */
+
+uint16_t readMIDpoint()
+{  
+  uint8_t byte0, byte1, adr = 0x1;
+  
+  byte0 = EEPROM.read(adr);
+  adr++;
+  byte1 = EEPROM.read(adr);
+  return  (uint16_t)(byte0 << 8) + byte1;
+}  
+
+/* =============================================== */

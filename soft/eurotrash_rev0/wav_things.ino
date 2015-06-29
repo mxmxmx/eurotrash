@@ -57,7 +57,7 @@ void _play(struct audioChannel* _channel) {
       
       _numVoice = _swap + _id*CHANNELS; // select audio object # 1,2 (LEFT) or 3,4 (RIGHT) 
       
-      _startPos = (HALFSCALE - CV[0x3-_id]) >> 0x5;   // CV
+      _startPos = _cv[0x3-_id];                       // CV
       _startPos += _channel->pos0;                    // manual offset  
       _startPos = _startPos < 0 ?  0 : _startPos;     // limit  
       _startPos = _startPos < CTRL_RESOLUTION ? _startPos : (CTRL_RESOLUTION - 0x1);    
@@ -251,7 +251,7 @@ void update_eof(uint8_t _channel) {
    if (_channel < CHANNELS) { 
      
        int32_t _srt, _end; 
-       _end = (HALFSCALE - CV[_channel])>>0x5;               
+       _end = _cv[_channel];               
        _end += audioChannels[_channel]->posX;               
        _end = _end < 0 ? 0 : _end;
        _end = _end < CTRL_RESOLUTION ? _end : CTRL_RESOLUTION - 0x1;
@@ -260,7 +260,7 @@ void update_eof(uint8_t _channel) {
        _srt = (CTRL_RESOLUTION - _srt) * audioChannels[_channel]->ctrl_res_eof ; // = effective length in ms  
        _end = _srt * CTRL_RESOLUTION_INV * _end;
        audioChannels[_channel]->eof = _end > 0 ? _end : 0x01;
-    }
+   }
 }  
 /* =============================================== */
 
@@ -269,10 +269,10 @@ void calibrate() {
   /*  calibrate mid point */
       float average = 0.0f;
       uint8_t save = false;
-      HALFSCALE = 0;
+      _MIDPOINT = 0;
       MENU_PAGE[LEFT]  = CALIBRATE;
       MENU_PAGE[RIGHT] = CALIBRATE;
-      update_display(LEFT, HALFSCALE);
+      update_display(LEFT, _MIDPOINT);
       delay(1000);
       for (int i = 0; i < 200; i++) {
    
@@ -286,17 +286,17 @@ void calibrate() {
            delay(2);
       }
       
-      HALFSCALE = average / 800.0f;
-      update_display(LEFT,  HALFSCALE);
-      Serial.println(HALFSCALE);
+      _MIDPOINT = average / 800.0f;
+      update_display(LEFT,  _MIDPOINT);
+      Serial.println(_MIDPOINT);
       delay(500);
-      update_display(RIGHT, HALFSCALE);
+      update_display(RIGHT, _MIDPOINT);
       // do we want to save the value?
       while(digitalRead(BUTTON_L)) {
         
            if (!digitalRead(BUTTON_R) && !save) { 
                  save = true; 
-                 writeMIDpoint(HALFSCALE);
+                 writeMIDpoint(_MIDPOINT);
                  update_display(RIGHT, 0x0);
             }
         
@@ -307,34 +307,8 @@ void calibrate() {
       _TIMESTAMP_BUTTON = millis(); 
 } 
 
-/* =============================================== */
 
-void writeMIDpoint(uint16_t _val) {
-   
-  uint8_t byte0, byte1, adr = 0;
-       
-       byte0 = _val >> 8;
-       byte1 = _val;
-       EEPROM.write(adr, 0xFF);
-       adr++;
-       EEPROM.write(adr, byte0);
-       adr++;
-       EEPROM.write(adr, byte1);
-}  
-
-/* =============================================== */
-
-uint16_t readMIDpoint() {
-  
-       uint8_t byte0, byte1, adr = 0x1;
-       byte0 = EEPROM.read(adr);
-       adr++;
-       byte1 = EEPROM.read(adr);
-       
-       return  (uint16_t)(byte0 << 8) + byte1;
-}  
-
-/* =============================================== */
+///////////////////////////////////////////////////
 
 void print_wav_info() {
   

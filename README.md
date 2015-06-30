@@ -17,6 +17,5 @@ compatible w/ teensy audio library: http://www.pjrc.com/teensy/td_libs_Audio.htm
 
 build info - https://github.com/mxmxmx/eurotrash/wiki
 
-NB: firmware development put on hold until the arduino 1.6.x / gcc migration thing has settled down again; there'll be a new underlying SD code, too; so too much stuff in flux atm.
 
 ![My image](https://farm8.staticflickr.com/7556/15847752621_464320a658_b.jpg)

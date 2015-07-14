@@ -2,17 +2,18 @@
 *   eurotrash
 *   dual wav player. 'beta'
 *
-*   - wav files should be 16 bit stereo or mono, 44.1kHz; **file names need to be 8.3** (SFN). 
+*   - wav files should be 16 bit mono, 44.1kHz; **file names need to be 8.3** (SFN). 
 *   max files = 128 (can be changed - see the respective #define (MAXFILES)
 *   a/the list of valid files will be generated during initialization.
 *
-*   micro SD card should be *class 10* !
+*   - 'raw' files that go onto the flash / bank 2 should be 16 bit mono, 44.1kHz, with no header. 
+*   **file names need to be 8.3** (SFN).
 *
-*   - 'raw' files that go on the flash need to be stored in a folder called /SERFLASH
-*   technically, they're not simply raw data; ie they *must* be created with wav2raw.c 
+*   - micro SD card should be *class 10* !
 *
-*  - TD: retrigger limit
-*  - seek: raw
+*  - TD: 
+*    - retrigger limit
+*    - seek: raw
 */
 
 //#define REV1  // uncomment if using rev 1 boards

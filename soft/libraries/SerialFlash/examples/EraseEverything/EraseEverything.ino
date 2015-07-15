@@ -3,19 +3,27 @@
 
 SerialFlashFile file;
 
+//#define REV1  // uncomment if using rev 1 boards
+
+#ifdef REV1
+  #define CS_MEM 15   // rev1
+#else
+  #define CS_MEM 13   // rev0
+#endif
+
 const unsigned long testIncrement = 4096;
 
 void setup() {
   //uncomment these if using Teensy audio shield
-  //SPI.setSCK(14);  // Audio shield has SCK on pin 14
-  //SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
+  SPI.setSCK(14);  // Audio shield has SCK on pin 14
+  SPI.setMOSI(7);  // Audio shield has MOSI on pin 7
 
   // wait up to 10 seconds for Arduino Serial Monitor
   unsigned long startMillis = millis();
   while (!Serial && (millis() - startMillis < 10000)) ;
   delay(100);
 
-  SerialFlash.begin();
+  SerialFlash.begin(CS_MEM);
   unsigned char id[3];
   SerialFlash.readID(id);
   unsigned long size = SerialFlash.capacity(id);

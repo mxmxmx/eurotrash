@@ -19,7 +19,7 @@ void print_raw_info() {
   
   Serial.println(" ");
   int x = 0;
-  while (x < SPI_FLASH_STATUS) {
+  while (x < RAW_FILECOUNT) {
     Serial.print(RAW_DISPLAYFILES[x]);
     Serial.print(" <-- ");
     Serial.print(FILES[MAXFILES+x]);
@@ -51,10 +51,10 @@ void print_wav_info() {
 
 uint8_t copy_raw(){ // copy files from SD : 
   
-    MENU_PAGE[LEFT]  = FLASH;
-    MENU_PAGE[RIGHT] = FLASH;
     uint16_t _files = 0x0;
+    
     _files = wtf();
+    // return to normal:
     MENU_PAGE[LEFT]  = FILESELECT; 
     MENU_PAGE[RIGHT] = FILESELECT; 
     delay(1000);
@@ -62,16 +62,39 @@ uint8_t copy_raw(){ // copy files from SD :
    return _files; 
 }
 
+/*  ======================================== */
+
 uint16_t wtf() {
 
   int count = 0, _file_num = 0;
-  if (SPI_FLASH_STATUS) update_display(LEFT, FLASH_OK);
+  MENU_PAGE[LEFT]  = FLASH;
+  MENU_PAGE[RIGHT] = FLASH;
+  
+  if (SPI_FLASH_STATUS) { 
+       update_display(LEFT, FLASH_OK);
+       update_display(RIGHT, 0x0);
+  }
+  else { 
+      update_display(LEFT, FLASH_NOT_OK);
+      update_display(RIGHT, 0x0);
+      return 0x0;
+  }
   File rootdir = SD.open("/");
   while (1) {
   
       File f = rootdir.openNextFile();
-      if (!f) break;
-      delay(500);
+      if (!f) { 
+          if (!_file_num) { 
+                update_display(LEFT, SD_ERROR);
+                update_display(RIGHT, 0x0);
+          }
+          else { 
+                update_display(LEFT, ALLGOOD);
+                update_display(RIGHT, 0x0);
+          }
+          break;
+      }
+      delay(1000);
       const char *filename = f.name();
       // raw ?
       uint32_t len = strlen(filename) - 4; 
@@ -82,8 +105,12 @@ uint16_t wtf() {
       {
          unsigned long length = f.size();
          Serial.println(filename);
-         update_display(RIGHT, FCNT);
-         // check if this file is already on the Flash chip
+         update_display(LEFT, FILES_OK);
+         update_display(RIGHT, _file_num);
+         delay(1000);
+         update_display(LEFT, FLASHING);
+         
+         // check if this file is already on the Flash chip :
          if (SerialFlash.exists(filename)) {
                 
                 Serial.println("  already exists on the Flash chip");
@@ -113,31 +140,40 @@ uint16_t wtf() {
       if (SerialFlash.create(filename, length)) {
             SerialFlashFile ff = SerialFlash.open(filename);
             if (ff) {
-                  _file_num++;
-                  update_display(LEFT, FLASHING);
                   // copy data loop
                   unsigned long count = 0;
                   while (count < length) {
-                    char buf[256];
-                    unsigned int n;
-                    n = f.read(buf, 256);
-                    ff.write(buf, n);
-                    count = count + n;
-                    Serial.print(".");
+                    
+                      char buf[256];
+                      unsigned int n;
+                      n = f.read(buf, 256);
+                      ff.write(buf, n);
+                      count = count + n;
+                      Serial.print(".");
                   }
+                  _file_num++;
                   ff.close();
                   Serial.println();
-           } else {
+           } 
+           else {
                   Serial.println("  error opening freshly created file!");
+                  update_display(LEFT, FLASH_NOT_OK);
+                  update_display(RIGHT, 0x0);
            }
     } 
-    else Serial.println("  unable to create file");
+    else { 
+          Serial.println("  unable to create file");
+          update_display(LEFT, FLASH_NOT_OK);
+          update_display(RIGHT, 0x0);
+    }
     f.close();
     }
   }
  rootdir.close();
  return _file_num;
 }
+
+/*  ======================================== */
 
 bool compareFiles(File &file, SerialFlashFile &ffile) {
   file.seek(0);

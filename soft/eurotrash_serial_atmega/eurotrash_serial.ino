@@ -180,11 +180,11 @@ void parse(byte _cmd) {
       break;
           
     }   
-    case 0x08:    { // vol L
+    case 0x08:    { // unused
        
-       msgL[0] = 'V';
-       msgL[1] = 'O';
-       msgL[2] = 'L';
+       msgL[0] = '>';
+       msgL[1] = '>';
+       msgL[2] = '>';
        msgL[3] = ' ';
        msgL[4] =   Serial.read();  
        msgL[5] =   Serial.read();  
@@ -199,10 +199,10 @@ void parse(byte _cmd) {
        break;
           
     }  
-    case 0x09:    { // vol R
-        msgR[0] = 'V'; 
-        msgR[1] = 'O';   
-        msgR[2] = 'L'; 
+    case 0x09:    { // unused
+        msgR[0] = '>'; 
+        msgR[1] = '>';   
+        msgR[2] = '>'; 
         msgR[3] = ' '; 
         msgR[4] =   Serial.read();
         msgR[5] =   Serial.read();

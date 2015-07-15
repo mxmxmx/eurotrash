@@ -49,10 +49,10 @@ const char *_SAVE = "    save?";
 const char *_OK   = "       OK";
 const char *_FLASH_OK       = " FLASH OK";
 const char *_FLASH_NOT_OK   = "    ERROR";
-const char *_FCNT           = "   RAW OK";
+const char *_FILES_OK       = " FILES OK";
 const char *_ALLGOOD        = "     A-OK";
 const char *_DOT            = "         ";
-const char *_SD_ERROR       = " SD EMPTY";
+const char *_SD_ERROR       = " SD ERROR";
 const char *_ERASE          = "... ERASE";
 const char *_FLASHING       = " FLASHING";
 
@@ -76,7 +76,7 @@ enum _button_states {
 enum {
   FLASH_OK,
   FLASH_NOT_OK,
-  FCNT, 
+  FILES_OK, 
   ALLGOOD,
   SD_ERROR,
   ERASE,
@@ -276,6 +276,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
  switch (MENU_PAGE[_channel]) {
    
      case FILESELECT: { // file
+     
            uint16_t max_f = (_bank == _SD) ? (FILECOUNT-1) : (RAW_FILECOUNT-1);
            if (tmp < 0)  {
                  tmp = max_f; 
@@ -292,6 +293,7 @@ void update_display(uint8_t _channel, uint16_t _newval) {
            if (_bank == _FLASH) memcpy(msg, RAW_DISPLAYFILES[tmp], DISPLAY_LEN+1); 
            else memcpy(msg, DISPLAYFILES[tmp], DISPLAY_LEN+1);
            
+           // decorate the selected file: 
            if (tmp == audioChannels[_channel]->file_wav) msg[0] = '\xb7';
            filedisplay[_channel] = tmp;  
            break;
@@ -301,7 +303,6 @@ void update_display(uint8_t _channel, uint16_t _newval) {
             if (tmp < 0) { tmp = 0; encoder[_channel].setPos(0x0); }
             else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
             audioChannels[_channel]->pos0 = tmp;
-            //memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
             value_to_msg(msg, tmp);
             cmd +=0x02;
             break;
@@ -311,7 +312,6 @@ void update_display(uint8_t _channel, uint16_t _newval) {
            if (tmp < 1)  { tmp = 1; encoder[_channel].setPos(0x1); }
            else if (tmp > CTRL_RESOLUTION) { tmp = CTRL_RESOLUTION; encoder[_channel].setPos(CTRL_RESOLUTION);}
            audioChannels[_channel]->posX = tmp;
-           //memcpy(msg, makedisplay(tmp).c_str(), DISPLAY_LEN+1);
            value_to_msg(msg, tmp);
            cmd +=0x04;
            break;
@@ -328,10 +328,12 @@ void update_display(uint8_t _channel, uint16_t _newval) {
      
      case FLASH: {
           
-           if (!_channel) {           
+           if (!_channel) {     
+             
                switch (_newval) {                     
                        case FLASH_OK:     { memcpy(msg, _FLASH_OK, DISPLAY_LEN);     break; }
                        case FLASH_NOT_OK: { memcpy(msg, _FLASH_NOT_OK, DISPLAY_LEN); break; }
+                       case FILES_OK:     { memcpy(msg, _FILES_OK, DISPLAY_LEN);     break; }
                        case ALLGOOD:      { memcpy(msg, _ALLGOOD,  DISPLAY_LEN);     break; }
                        case SD_ERROR:     { memcpy(msg, _SD_ERROR, DISPLAY_LEN);     break; }
                        case ERASE:        { memcpy(msg, _ERASE,  DISPLAY_LEN);       break; }
@@ -341,12 +343,9 @@ void update_display(uint8_t _channel, uint16_t _newval) {
                break;
           }
           else  { 
-              switch (_newval) {       
-                      case FCNT:           { memcpy(msg, _FCNT, DISPLAY_LEN);   break; }
-                      case ALLGOOD:        { memcpy(msg, _DOT,  DISPLAY_LEN);   break; }
-                      default: break;
-              }
-              break;
+                if (_newval) value_to_msg(msg, _newval);
+                else memcpy(msg, _DOT, DISPLAY_LEN); 
+                break;
           }
     }
     default: break;  

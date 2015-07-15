@@ -13,11 +13,10 @@
 *
 *  - TD: 
 *    - retrigger limit
-*    - flash erase / menu
-*    - seek: raw
+*    - erase Flash / menu
 */
 
-//#define REV1  // uncomment if using rev 1 boards
+// #define REV1  // uncomment if using rev 1 boards
 
 #include <Audio.h>
 #include <Wire.h>
@@ -128,12 +127,12 @@ uint16_t SPI_FLASH_STATUS = 0;
 #ifdef REV1
   #define CS_MEM 15   // rev1
   #define BUTTON_R 13 // rev1
-  #define SPI_FLASH 1 // rev1
 #else
   #define CS_MEM 13   // rev0
   #define BUTTON_R 15 // rev0
-  #define SPI_FLASH 1 // rev0
 #endif
+
+#define SPI_FLASH 1 // 0 = no flash
 
 /* CV inputs */
 #define numADC 4

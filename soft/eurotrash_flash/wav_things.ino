@@ -68,8 +68,8 @@ void _play(struct audioChannel* _channel) {
       fade[_numVoice + _bank*0x4]->fadeIn(FADE_IN);
        
        if (_bank) { // spi flash
-            uint16_t _file   = _channel->file_wav;
-            raw[_numVoice]->play(FILES[MAXFILES+_file]);
+             uint16_t _file   = _channel->file_wav;
+             raw[_numVoice]->seek(FILES[MAXFILES+_file], (_startPos >> 8) << 8); // startPos ~ pages
        }
        else { // SD
              wav[_numVoice]->seek(_startPos>>9);    
@@ -200,52 +200,3 @@ void update_eof(uint8_t _channel) {
    }
 }  
 /* =============================================== */
-
-void calibrate() {
-  
-  /*  calibrate mid point */
-      float average = 0.0f;
-      uint8_t save = false;
-      _MIDPOINT = 0;
-      MENU_PAGE[LEFT]  = CALIBRATE;
-      MENU_PAGE[RIGHT] = CALIBRATE;
-      update_display(LEFT, _MIDPOINT);
-      delay(1000);
-      for (int i = 0; i < 200; i++) {
-   
-           average +=  analogRead(CV1);
-           delay(2);
-           average +=  analogRead(CV2);
-           delay(2);
-           average +=  analogRead(CV3);
-           delay(2);
-           average +=  analogRead(CV4);
-           delay(2);
-      }
-      
-      _MIDPOINT = average / 800.0f;
-      update_display(LEFT,  _MIDPOINT);
-      Serial.println(_MIDPOINT);
-      delay(500);
-      update_display(RIGHT, _MIDPOINT);
-      // do we want to save the value?
-      while(digitalRead(BUTTON_L)) {
-        
-           if (!digitalRead(BUTTON_R) && !save) { 
-                 save = true; 
-                 writeMIDpoint(_MIDPOINT);
-                 update_display(RIGHT, 0x0);
-            }
-        
-      }
-      delay(1000);
-      MENU_PAGE[LEFT]  = FILESELECT; 
-      MENU_PAGE[RIGHT] = FILESELECT; 
-      _TIMESTAMP_BUTTON = millis(); 
-} 
-
-
-///////////////////////////////////////////////////
-
-
-

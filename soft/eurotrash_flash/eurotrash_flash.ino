@@ -16,7 +16,7 @@
 *    - erase Flash / menu
 */
 
-// #define REV1  // uncomment if using rev 1 boards
+//#define REV1  // uncomment if using rev 1 boards
 
 #include <Audio.h>
 #include <Wire.h>
@@ -132,8 +132,8 @@ uint16_t SPI_FLASH_STATUS = 0;
   #define BUTTON_R 15 // rev0
 #endif
 
-#define SPI_FLASH 1 // 0 = no flash
-
+ #define SPI_FLASH 1 // 0 = no flash
+ 
 /* CV inputs */
 #define numADC 4
 #define ADC_RES 12

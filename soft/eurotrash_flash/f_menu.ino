@@ -152,6 +152,7 @@ void process_buttons() {
         else if (EVENT_B[_button] == HOLD) {
           // switch banks ?
           if (SPI_FLASH_STATUS+SPI_FLASH) { 
+            
                 uint16_t _bank = audioChannels[_button]->bank;
                 uint16_t _voice_num = _bank*0x04 + CHANNELS*audioChannels[_button]->id;
                 // fade out channel
@@ -165,6 +166,17 @@ void process_buttons() {
                 MENU_PAGE[_button] = FILESELECT;
                 update_display(_button, _file);
                 
+                audioChannels[_button]->state = _STOP; // pause channel
+                _FADE_TIMESTAMP_F_CHANGE = millis();
+                
+                if (!audioChannels[_button]->id) {
+                   _EOF_L_OFF = false;
+                   FADE_LEFT = true;
+                } 
+                else {
+                  _EOF_R_OFF = false;
+                  FADE_RIGHT = true;
+                }
           }  
           EVENT_B[_button] = STATE_B[_button] = DONE; 
           _TIMESTAMP_BUTTON = millis(); 

@@ -10,11 +10,11 @@ uint16_t RAW_FILECOUNT;
 const uint16_t DISPLAY_LEN = 9;       // 8 (8.3) + 1 (active file indicator)
 const uint16_t NAME_LEN = 13;         // 8.3
 /* misc arrays */
-char FILES[MAXFILES*CHANNELS][NAME_LEN];     // file name, SD
-uint32_t RAW_FILE_ADR[MAXFILES+0x1];         // file adr, SPI
-//uint16_t SD_FILE_INDEX[MAXFILES];          // SD file indices
-char DISPLAYFILES[MAXFILES][NAME_LEN];       // display for SD
-char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];   // display for spi flash
+char FILES[MAXFILES*CHANNELS][NAME_LEN];         // file names
+//uint32_t RAW_FILE_ADR[MAXFILES+0x1];           // file adr, SPI
+//uint16_t SD_FILE_INDEX[MAXFILES];              // SD file indices
+char DISPLAYFILES[MAXFILES*CHANNELS][NAME_LEN];  // display names
+//char RAW_DISPLAYFILES[MAXFILES][NAME_LEN];  
 
 uint32_t CTRL_RES[MAXFILES*CHANNELS];
 uint32_t CTRL_RES_EOF[MAXFILES*CHANNELS];
@@ -152,11 +152,11 @@ void process_buttons() {
           // switch banks ?
           if (SPI_FLASH_STATUS+SPI_FLASH) { 
                 uint16_t _bank = audioChannels[_button]->bank;
-                uint16_t _xxx  = _bank*0x04 + CHANNELS*audioChannels[_button]->id;
+                uint16_t _voice_num = _bank*0x04 + CHANNELS*audioChannels[_button]->id;
                 // fade out channel
-                fade[_xxx]->fadeOut(FADE_OUT);
-                _xxx++;
-                fade[_xxx]->fadeOut(FADE_OUT);
+                fade[_voice_num]->fadeOut(FADE_OUT);
+                _voice_num++;
+                fade[_voice_num]->fadeOut(FADE_OUT);
                 // update
                 audioChannels[_button]->bank = ~_bank & 1u;
                 uint16_t _file = 0x0;
@@ -229,8 +229,12 @@ void buttons(uint16_t _channel) {
 
 void update_channel(struct audioChannel* _ch) {
         
-        uint16_t _id   = _ch->id;          // L or R ?
-        uint16_t _file = filedisplay[_id]; // file #
+       uint16_t _id, _bank, _file;
+       
+         _id   = _ch->id;          // L or R ?
+         _bank = _ch->bank;
+         _file = filedisplay[_id]; // file #
+        
         _ch->file_wav = _file;             // select file
         update_display(_id, _file);        // update menu
         _ch->state = _STOP;                // pause channel
@@ -245,8 +249,8 @@ void update_channel(struct audioChannel* _ch) {
              _EOF_R_OFF = false;
              FADE_RIGHT = true;
         }
-        fade[_id*CHANNELS]->fadeOut(_FADE_F_CHANGE);
-        fade[_id*CHANNELS+0x1]->fadeOut(_FADE_F_CHANGE);
+        fade[_id*CHANNELS + _bank*0x4]->fadeOut(_FADE_F_CHANGE);
+        fade[_id*CHANNELS + _bank*0x4 + 0x1]->fadeOut(_FADE_F_CHANGE);
         _FADE_TIMESTAMP_F_CHANGE = millis();
 }  
 
@@ -288,10 +292,8 @@ void update_display(uint8_t _channel, uint16_t _newval) {
              }
            else DIR = true;
            
-           if (tmp > max_f) tmp = max_f;
-           
-           if (_bank == _FLASH) memcpy(msg, RAW_DISPLAYFILES[tmp], DISPLAY_LEN+1); 
-           else memcpy(msg, DISPLAYFILES[tmp], DISPLAY_LEN+1);
+           tmp = (tmp > max_f) ? max_f : tmp;
+           memcpy(msg, DISPLAYFILES[tmp + _bank*MAXFILES], DISPLAY_LEN+1);
            
            // decorate the selected file: 
            if (tmp == audioChannels[_channel]->file_wav) msg[0] = '\xb7';

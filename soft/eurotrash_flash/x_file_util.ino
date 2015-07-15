@@ -20,7 +20,7 @@ void print_raw_info() {
   Serial.println(" ");
   int x = 0;
   while (x < RAW_FILECOUNT) {
-    Serial.print(RAW_DISPLAYFILES[x]);
+    Serial.print(DISPLAYFILES[MAXFILES+x]);
     Serial.print(" <-- ");
     Serial.print(FILES[MAXFILES+x]);
     Serial.print(" / ");
@@ -49,52 +49,65 @@ void print_wav_info() {
 
 /*  ======================================== */
 
-uint8_t copy_raw(){ // copy files from SD : 
+uint16_t copy_raw(){ // copy files from SD : 
   
-    uint16_t _files = 0x0;
+    uint16_t _status = 0x0;
     
-    _files = wtf();
+    _status = sd_to_flash();
     // return to normal:
     MENU_PAGE[LEFT]  = FILESELECT; 
     MENU_PAGE[RIGHT] = FILESELECT; 
-    delay(1000);
+    delay(2000);
    _TIMESTAMP_BUTTON = millis(); 
-   return _files; 
+   return _status; 
 }
 
 /*  ======================================== */
 
-uint16_t wtf() {
+uint16_t sd_to_flash() {
 
-  int count = 0, _file_num = 0;
+  int count = 0, _file_num = 0, _errors = 0;
   MENU_PAGE[LEFT]  = FLASH;
   MENU_PAGE[RIGHT] = FLASH;
   
+  delay(500);
+  
   if (SPI_FLASH_STATUS) { 
        update_display(LEFT, FLASH_OK);
+       delay(100);
        update_display(RIGHT, 0x0);
+       delay(1000);
   }
   else { 
       update_display(LEFT, FLASH_NOT_OK);
+      delay(100);
       update_display(RIGHT, 0x0);
       return 0x0;
   }
+ 
   File rootdir = SD.open("/");
   while (1) {
   
       File f = rootdir.openNextFile();
       if (!f) { 
           if (!_file_num) { 
-                update_display(LEFT, SD_ERROR);
+                delay(500);
                 update_display(RIGHT, 0x0);
+                delay(500);
+                update_display(LEFT, SD_ERROR);
+                delay(2000);
           }
           else { 
-                update_display(LEFT, ALLGOOD);
+                delay(500);
                 update_display(RIGHT, 0x0);
+                delay(500);
+                if (!_errors) update_display(LEFT, ALLGOOD);
+                else update_display(LEFT, FLASH_NOT_OK);
+                delay(1000);
           }
           break;
       }
-      delay(1000);
+      
       const char *filename = f.name();
       // raw ?
       uint32_t len = strlen(filename) - 4; 
@@ -105,10 +118,12 @@ uint16_t wtf() {
       {
          unsigned long length = f.size();
          Serial.println(filename);
+         delay(50);
          update_display(LEFT, FILES_OK);
-         update_display(RIGHT, _file_num);
          delay(1000);
          update_display(LEFT, FLASHING);
+         delay(50);
+         update_display(RIGHT, _file_num);
          
          // check if this file is already on the Flash chip :
          if (SerialFlash.exists(filename)) {
@@ -122,6 +137,7 @@ uint16_t wtf() {
                             f.close();
                             ff.close();
                             _file_num++;
+                            update_display(RIGHT, _file_num);
                             continue;  // advance to next file
                         } else {
                             Serial.println("  files are different");
@@ -152,21 +168,27 @@ uint16_t wtf() {
                       Serial.print(".");
                   }
                   _file_num++;
+                  update_display(RIGHT, _file_num);
                   ff.close();
                   Serial.println();
            } 
            else {
                   Serial.println("  error opening freshly created file!");
+                  _errors++;
                   update_display(LEFT, FLASH_NOT_OK);
+                  delay(100);
                   update_display(RIGHT, 0x0);
            }
     } 
     else { 
           Serial.println("  unable to create file");
+          _errors++;
           update_display(LEFT, FLASH_NOT_OK);
+          delay(100);
           update_display(RIGHT, 0x0);
     }
     f.close();
+    delay(500);
     }
   }
  rootdir.close();
@@ -226,7 +248,7 @@ uint16_t extract_flash(void)
            justify--;
            tmp[justify] = ' '; 
         }
-        memcpy(RAW_DISPLAYFILES[num_files], tmp, sizeof(tmp));
+        memcpy(DISPLAYFILES[MAXFILES + num_files], tmp, sizeof(tmp));
         num_files++;
      } 
      else break; // no more files

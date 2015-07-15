@@ -64,13 +64,14 @@ void _play(struct audioChannel* _channel) {
       _channel->srt = _startPos;                      // remember start pos        
       _startPos *= _channel->ctrl_res;                // scale => bytes / frames
      
+      // fade in voice: 
+      fade[_numVoice + _bank*0x4]->fadeIn(FADE_IN);
+       
        if (_bank) { // spi flash
             uint16_t _file   = _channel->file_wav;
-            fade[_numVoice+0x4]->fadeIn(FADE_IN);
             raw[_numVoice]->play(FILES[MAXFILES+_file]);
        }
        else { // SD
-             fade[_numVoice]->fadeIn(FADE_IN);
              wav[_numVoice]->seek(_startPos>>9);    
        }   
        // swap file and fade out previous file :
@@ -153,38 +154,31 @@ void _PAUSE_EOF_R() {
 
 /* =============================================== */
 
-void _open_new(struct audioChannel* _channel) {
-  
-     if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
+void _open_new(struct audioChannel* _channel) { 
+    
+    if (millis() - _FADE_TIMESTAMP_F_CHANGE > _FADE_F_CHANGE) {
       
-         uint16_t  _id, _file;
+         uint16_t  _id, _bank, _file;
          
          _id   = _channel->id*CHANNELS;
+         _bank = _channel->bank*MAXFILES;
          _file = _channel->file_wav;
-         const char *_file_name = FILES[_file];
          
-         // close files : 
-         wav[_id]->close();     
-         wav[_id+0x1]->close(); 
-         // open new files : 
-         wav[_id]->open(_file_name);
-         wav[_id+0x1]->open(_file_name);
+         if (_bank == _SD) { 
          
+             const char *_file_name = FILES[_file];
+             // close files : 
+             wav[_id]->close();     
+             wav[_id+0x1]->close(); 
+             // open new files : 
+             wav[_id]->open(_file_name);
+             wav[_id+0x1]->open(_file_name);
+         }
          //  update channel data: 
-         _channel->ctrl_res = CTRL_RES[_file];
-         _channel->ctrl_res_eof = CTRL_RES_EOF[_file]; 
+         _channel->ctrl_res = CTRL_RES[_file + _bank];
+         _channel->ctrl_res_eof = CTRL_RES_EOF[_file + _bank]; 
          _channel->swap  = 0x0;     // reset
          _channel->state = _PLAY;  
-    }
-    
-    else if (_channel->bank) {  // SPI flash 
-      
-         uint16_t _file = _channel->file_wav;
-         // update channel data: 
-         _channel->ctrl_res = CTRL_RES[_file + MAXFILES];
-         _channel->ctrl_res_eof = CTRL_RES_EOF[_file + MAXFILES]; 
-         _channel->swap  = 0x0;     // reset
-         _channel->state = _PLAY; 
     }
 }
 

@@ -13,6 +13,7 @@
 *
 *  - TD: 
 *    - retrigger limit
+*    - flash erase / menu
 *    - seek: raw
 */
 

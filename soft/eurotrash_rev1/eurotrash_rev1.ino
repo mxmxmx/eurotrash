@@ -19,6 +19,7 @@
 #define REV1  // uncomment if using rev 1 boards
 
 #include <Audio.h>
+#include <SerialFlash.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
